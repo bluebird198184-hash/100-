@@ -38,6 +38,12 @@
 
         let app, db, auth, userId;
 
+        // Promiseを使って初期化完了を待てるようにする
+        let firebaseReadyPromiseResolve;
+        const firebaseReadyPromise = new Promise(resolve => {
+            firebaseReadyPromiseResolve = resolve;
+        });
+
         async function initializeFirebase() {
             try {
                 if (Object.keys(firebaseConfig).length > 0) {
@@ -60,17 +66,19 @@
                     window.setDoc = setDoc;
                     window.getDoc = getDoc;
                     
-                    if (window.loadHighScores) window.loadHighScores();
-
+                    firebaseReadyPromiseResolve(true); // Firebase初期化完了を通知
                 } else {
                     console.error("Firebase configuration is missing. Running in local mode.");
                     window.firebaseInitialized = false;
-                    setTimeout(window.loadHighScores, 1000); 
+                    // ローカルモードでもロードは続行させる
+                    firebaseReadyPromiseResolve(false); 
                 }
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
                 window.firebaseInitialized = false;
-                setTimeout(window.loadHighScores, 1000); 
+                firebaseReadyPromiseResolve(false); // 初期化失敗を通知
+            } finally {
+                if (window.loadHighScores) window.loadHighScores();
             }
         }
 
@@ -300,6 +308,9 @@
 
     <script>
         const TOTAL_QUESTIONS = 30;
+        
+        // --- Promiseを使ってFirebaseの初期化完了を待つ (修正済み) ---
+        const getFirebaseReadyPromise = () => window.firebaseReadyPromise;
 
         let questions = [];
         let state = {
@@ -311,6 +322,7 @@
             startTime: null,
             elapsedTime: 0,
         };
+        // Infinityはベストタイム（最小値）の初期値として使用
         let highScore = { score: 0, time: Infinity }; 
         let timerInterval;
 
@@ -386,29 +398,41 @@
         // --- Firebase/Firestore Logic ---
 
         window.loadHighScores = async function() {
+            // Firebase初期化を待機
+            const isFirebaseReady = await getFirebaseReadyPromise();
+
             elements.userIdDisplay.textContent = window.userId ? `ユーザーID: ${window.userId}` : 'ユーザーID: (ローカルモード)';
 
             try {
-                if (!window.firebaseInitialized || !window.doc || !window.getDoc) {
-                    highScore = { score: 0, time: Infinity };
-                } else {
+                // Firebaseが利用可能かどうかをチェック
+                if (isFirebaseReady && window.db && window.doc && window.getDoc) {
                     const db = window.db;
                     const userId = window.userId;
                     const appId = window.appId;
 
+                    // --- 1. Firestore Load (Primary) ---
                     const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
                     const docSnap = await getDoc(scoreRef);
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         highScore.score = data.score || 0;
-                        highScore.time = data.time || Infinity;
+                        // NaNチェックを追加
+                        highScore.time = isNaN(data.time) ? Infinity : data.time; 
                     } else {
                         highScore = { score: 0, time: Infinity };
                     }
+                    console.log("High score loaded from Firestore.");
+                } else {
+                    // --- 2. Local Storage Load (Fallback) ---
+                    console.log("Firebase not initialized. Falling back to Local Storage.");
+                    const localData = JSON.parse(localStorage.getItem('tashizan_high_score') || '{}');
+                    highScore.score = localData.score || 0;
+                    // NaNチェックとInfinityチェックを追加
+                    highScore.time = isNaN(localData.time) || localData.time === Infinity ? Infinity : localData.time; 
                 }
             } catch (error) {
-                console.error("Error loading high score:", error);
-                highScore = { score: 0, time: Infinity };
+                console.error("Error loading high score (Local or Firebase):", error);
+                // エラーが発生した場合も、現在のhighScore（初期値0/Infinity）を維持
             } finally {
                 const timeDisplay = highScore.time === Infinity ? '--' : formatTime(highScore.time);
                 elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
@@ -418,11 +442,7 @@
         }
 
         async function saveHighScore(newScore, newTime) {
-            // 途中終了の場合は保存しない（isMidQuitがtrueの場合、この関数は呼ばれないはずだが、念のためロジックを修正）
-            // 修正: 満点(TOTAL_QUESTIONS)でなくても、スコアが上がれば、または同スコアでタイムが良ければ保存する
-            
-            if (!window.firebaseInitialized || !window.doc || !window.setDoc) return false;
-            
+            // ハイスコア更新チェック
             let isNewHighScore = false;
             if (newScore > highScore.score) {
                 isNewHighScore = true;
@@ -433,25 +453,38 @@
 
             if (!isNewHighScore) return false;
 
-            const db = window.db;
-            const userId = window.userId;
-            const appId = window.appId;
-            const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
-            
-            try {
-                await setDoc(scoreRef, { score: newScore, time: newTime, timestamp: new Date().getTime() }, { merge: true });
-                highScore.score = newScore;
-                highScore.time = newTime;
-                
-                const timeDisplay = formatTime(highScore.time);
-                elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
-                elements.bestTimeDisplay.textContent = timeDisplay;
+            // Firebase初期化を待機
+            const isFirebaseReady = await getFirebaseReadyPromise();
 
-                return true;
-            } catch (error) {
-                console.error("Error saving high score:", error);
-                return false;
+            if (isFirebaseReady && window.doc && window.setDoc) {
+                // --- 1. Firestore Save (Primary) ---
+                const db = window.db;
+                const userId = window.userId;
+                const appId = window.appId;
+                const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
+                
+                try {
+                    await setDoc(scoreRef, { score: newScore, time: newTime, timestamp: new Date().getTime() }, { merge: true });
+                    console.log("High score saved to Firestore.");
+                } catch (error) {
+                    console.error("Error saving high score to Firestore:", error);
+                    // Firestoreへの保存が失敗した場合でも、ローカル変数と表示は更新する
+                }
+            } else {
+                // --- 2. Local Storage Save (Fallback) ---
+                console.log("Firebase not ready. Saving to Local Storage instead.");
+                localStorage.setItem('tashizan_high_score', JSON.stringify({ score: newScore, time: newTime }));
             }
+            
+            // スコアが更新されたので、ローカル変数と表示を更新する
+            highScore.score = newScore;
+            highScore.time = newTime;
+            
+            const timeDisplay = formatTime(highScore.time);
+            elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
+            elements.bestTimeDisplay.textContent = timeDisplay;
+
+            return true;
         }
 
         // --- Quiz Logic ---
