@@ -27,6 +27,8 @@
     
     <!-- Firebase SDKs -->
     <script type="module">
+        /*
+        // --- 修正: Firebaseの初期化を強制的にスキップし、ローカル起動を保証します ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -85,6 +87,25 @@
         }
 
         initializeFirebase();
+        */
+        
+        // --- 強制ローカル起動設定 ---
+        window.firebaseReadyPromise = Promise.resolve(false); 
+        window.firebaseInitialized = false;
+        window.userId = 'local-user'; // ダミーのユーザーID
+        
+        // ロード処理をすぐに開始
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.loadHighScores) {
+                window.loadHighScores();
+            } else {
+                // loadHighScores関数がまだロードされていない場合は、安全のためにローディングを非表示にする
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (loadingOverlay) loadingOverlay.classList.add('hidden');
+                const startSection = document.getElementById('start-section');
+                if (startSection) startSection.classList.remove('hidden');
+            }
+        });
     </script>
 
     <style>
@@ -198,7 +219,8 @@
         </div>
 
         <main id="app-container" class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 relative border-4 border-primary-green/50">
-            <div id="loading-overlay" class="loading-overlay hidden">
+            <!-- 修正: 初期状態でローディングを表示 -->
+            <div id="loading-overlay" class="loading-overlay"> 
                 <p class="main-font text-2xl font-extrabold text-primary-blue">じゅんびちゅう...</p>
             </div>
 
@@ -305,14 +327,16 @@
 
     <!-- ユーザーIDを画面左下（フッター）に表示 -->
     <footer id="user-id-footer">
-        <span id="user-id-display">ユーザーID: ロード中...</span>
+        <!-- 修正: Firebaseを使わない場合は「ローカルモード」と表示 -->
+        <span id="user-id-display">ユーザーID: ローカルモード</span>
     </footer>
 
     <script>
         const TOTAL_QUESTIONS = 30;
         
-        // --- Promiseを使ってFirebaseの初期化完了を待つ (修正済み) ---
-        const getFirebaseReadyPromise = () => window.firebaseReadyPromise;
+        // --- Promiseを使ってFirebaseの初期化完了を待つ (Firebaseをスキップ) ---
+        // 修正: Promise.resolve(false) を返すことで、Firebaseは未初期化として扱う
+        const getFirebaseReadyPromise = () => window.firebaseReadyPromise; 
 
         let questions = [];
         let state = {
@@ -360,15 +384,9 @@
             mistakesContainer: document.getElementById('mistakes-container'),
             mistakeCount: document.getElementById('mistake-count'),
             mistakesList: document.getElementById('mistakes-list'),
-            // 修正：ボタンIDを「ホームへ戻る」に合わせた名前に変更
             goToHomeBtn: document.getElementById('go-to-home-btn'), 
         };
         
-        // --- 修正点: window.onload でローディング表示を制御しない ---
-        // window.onload = function() {
-        //     elements.loadingOverlay.classList.remove('hidden');
-        // };
-
         // --- Utility for Time Formatting ---
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
@@ -398,49 +416,32 @@
             }
         }
 
-        // --- Firebase/Firestore Logic ---
+        // --- Firebase/Firestore Logic (Local Fallback Only) ---
 
         window.loadHighScores = async function() {
-            // Firebase初期化を待機
-            const isFirebaseReady = await getFirebaseReadyPromise();
+            // Firebase初期化を待機 (ローカルモードではすぐに完了する)
+            await getFirebaseReadyPromise(); // Promiseが解決するのを待つ
 
-            elements.userIdDisplay.textContent = window.userId ? `ユーザーID: ${window.userId}` : 'ユーザーID: (ローカルモード)';
+            // 修正: ユーザーID表示をローカルモードに
+            elements.userIdDisplay.textContent = window.userId ? `ユーザーID: ${window.userId}` : 'ユーザーID: ローカルモード';
 
             try {
-                // Firebaseが利用可能かどうかをチェック
-                if (isFirebaseReady && window.db && window.doc && window.getDoc) {
-                    const db = window.db;
-                    const userId = window.userId;
-                    const appId = window.appId;
-
-                    // --- 1. Firestore Load (Primary) ---
-                    const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
-                    const docSnap = await getDoc(scoreRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        highScore.score = data.score || 0;
-                        // NaNチェックを追加
-                        highScore.time = isNaN(data.time) ? Infinity : data.time; 
-                    } else {
-                        highScore = { score: 0, time: Infinity };
-                    }
-                    console.log("High score loaded from Firestore.");
-                } else {
-                    // --- 2. Local Storage Load (Fallback) ---
-                    console.log("Firebase not initialized. Falling back to Local Storage.");
-                    const localData = JSON.parse(localStorage.getItem('tashizan_high_score') || '{}');
-                    highScore.score = localData.score || 0;
-                    // NaNチェックとInfinityチェックを追加
-                    highScore.time = isNaN(localData.time) || localData.time === Infinity ? Infinity : localData.time; 
-                }
+                // FirebaseInitializedフラグに関わらず、ローカルストレージをメインとして使う
+                // --- 2. Local Storage Load (Fallback) ---
+                console.log("Loading high score from Local Storage (Firebase skipped).");
+                const localData = JSON.parse(localStorage.getItem('tashizan_high_score') || '{}');
+                highScore.score = localData.score || 0;
+                // NaNチェックとInfinityチェックを追加
+                highScore.time = isNaN(localData.time) || localData.time === Infinity ? Infinity : localData.time; 
+            
             } catch (error) {
-                console.error("Error loading high score (Local or Firebase):", error);
+                console.error("Error loading high score from Local Storage:", error);
                 // エラーが発生した場合も、現在のhighScore（初期値0/Infinity）を維持
             } finally {
                 const timeDisplay = highScore.time === Infinity ? '--' : formatTime(highScore.time);
                 elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
                 elements.bestTimeDisplay.textContent = timeDisplay;
-                showStartSection();
+                showStartSection(); // 読み込み完了後、スタート画面へ
             }
         }
 
@@ -456,28 +457,10 @@
 
             if (!isNewHighScore) return false;
 
-            // Firebase初期化を待機
-            const isFirebaseReady = await getFirebaseReadyPromise();
-
-            if (isFirebaseReady && window.doc && window.setDoc) {
-                // --- 1. Firestore Save (Primary) ---
-                const db = window.db;
-                const userId = window.userId;
-                const appId = window.appId;
-                const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
-                
-                try {
-                    await setDoc(scoreRef, { score: newScore, time: newTime, timestamp: new Date().getTime() }, { merge: true });
-                    console.log("High score saved to Firestore.");
-                } catch (error) {
-                    console.error("Error saving high score to Firestore:", error);
-                    // Firestoreへの保存が失敗した場合でも、ローカル変数と表示は更新する
-                }
-            } else {
-                // --- 2. Local Storage Save (Fallback) ---
-                console.log("Firebase not ready. Saving to Local Storage instead.");
-                localStorage.setItem('tashizan_high_score', JSON.stringify({ score: newScore, time: newTime }));
-            }
+            // 修正: Firebaseへの保存処理をスキップ
+            // --- Local Storage Save ---
+            console.log("Saving high score to Local Storage.");
+            localStorage.setItem('tashizan_high_score', JSON.stringify({ score: newScore, time: newTime }));
             
             // スコアが更新されたので、ローカル変数と表示を更新する
             highScore.score = newScore;
@@ -671,7 +654,7 @@
             elements.resultsSection.classList.add('hidden');
             elements.midQuitSection.classList.add('hidden');
             
-            // --- 修正点: 読み込み完了後にローディング画面を非表示にする ---
+            // --- 読み込み完了後にローディング画面を非表示にする ---
             elements.loadingOverlay.classList.add('hidden'); 
             elements.startSection.classList.remove('hidden');
         }
@@ -692,16 +675,20 @@
         elements.nextBtn.addEventListener('click', nextQuestion);
         elements.endQuizBtn.addEventListener('click', endQuiz);
         elements.startNewBtn.addEventListener('click', startNewQuiz);
-        // 修正: 30問完了後のボタンをホームへ戻るに変更
         elements.goToHomeBtn.addEventListener('click', showStartSection); 
         elements.restartFromQuitBtn.addEventListener('click', startNewQuiz);
 
-        // --- 修正点: DOMContentLoaded または window.onload でローディング表示を開始する ---
+        // --- 修正: DOMContentLoaded でロード処理を開始し、ローディング画面を確実に表示させる ---
         document.addEventListener('DOMContentLoaded', () => {
             elements.loadingOverlay.classList.remove('hidden');
-            // 初期化処理は <script type="module"> で実行されているため、
-            // その中で最後に呼ばれる loadHighScores() が showStartSection() を呼び出すことで、
-            // ローディング画面が非表示になることが保証される。
+            // type="module"のスクリプトで loadHighScores を呼び出す代わりに、ここで直接呼び出す
+            // 強制的にローカルモードで動作させるため、この呼び出しはすぐに showStartSection() に進むはず
+            if (window.loadHighScores) {
+                window.loadHighScores();
+            } else {
+                // 万が一 loadHighScores が定義されていなくても、画面が止まらないようにする
+                showStartSection();
+            }
         });
     </script>
 </body>
