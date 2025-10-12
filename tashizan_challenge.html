@@ -43,6 +43,7 @@
         const firebaseReadyPromise = new Promise(resolve => {
             firebaseReadyPromiseResolve = resolve;
         });
+        window.firebaseReadyPromise = firebaseReadyPromise; // windowに公開
 
         async function initializeFirebase() {
             try {
@@ -78,7 +79,8 @@
                 window.firebaseInitialized = false;
                 firebaseReadyPromiseResolve(false); // 初期化失敗を通知
             } finally {
-                if (window.loadHighScores) window.loadHighScores();
+                // ここで loadHighScores を呼び出すことで、必ず初期化後にスコアを読み込む
+                if (window.loadHighScores) window.loadHighScores(); 
             }
         }
 
@@ -362,9 +364,10 @@
             goToHomeBtn: document.getElementById('go-to-home-btn'), 
         };
         
-        window.onload = function() {
-            elements.loadingOverlay.classList.remove('hidden');
-        };
+        // --- 修正点: window.onload でローディング表示を制御しない ---
+        // window.onload = function() {
+        //     elements.loadingOverlay.classList.remove('hidden');
+        // };
 
         // --- Utility for Time Formatting ---
         function formatTime(ms) {
@@ -660,6 +663,7 @@
         }
 
         function showStartSection() {
+            stopTimer(); // タイマーが動いている場合は止める
             state.elapsedTime = 0;
             updateTimerDisplay();
 
@@ -667,7 +671,8 @@
             elements.resultsSection.classList.add('hidden');
             elements.midQuitSection.classList.add('hidden');
             
-            elements.loadingOverlay.classList.add('hidden');
+            // --- 修正点: 読み込み完了後にローディング画面を非表示にする ---
+            elements.loadingOverlay.classList.add('hidden'); 
             elements.startSection.classList.remove('hidden');
         }
 
@@ -691,10 +696,13 @@
         elements.goToHomeBtn.addEventListener('click', showStartSection); 
         elements.restartFromQuitBtn.addEventListener('click', startNewQuiz);
 
-        // Initial setup check
-        if (!window.firebaseInitialized) {
+        // --- 修正点: DOMContentLoaded または window.onload でローディング表示を開始する ---
+        document.addEventListener('DOMContentLoaded', () => {
             elements.loadingOverlay.classList.remove('hidden');
-        }
+            // 初期化処理は <script type="module"> で実行されているため、
+            // その中で最後に呼ばれる loadHighScores() が showStartSection() を呼び出すことで、
+            // ローディング画面が非表示になることが保証される。
+        });
     </script>
 </body>
 </html>
