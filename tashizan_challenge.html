@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100までのたしざんチャレンジ！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 1年生向けに「Rounded Mplus 1p」をメインフォントとして追加 -->
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Rounded+Mplus+1p:wght@700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#4E98F4', // 明るい青
+                        'primary-green': '#65C466', // 明るい緑
+                        'bg-light': '#FFFDE7', // クリームイエロー
+                        'text-dark': '#333333',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        setLogLevel('Debug');
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        let app, db, auth, userId;
+
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    userId = auth.currentUser?.uid || crypto.randomUUID();
+                    window.firebaseInitialized = true;
+                    window.db = db;
+                    window.userId = userId;
+                    window.appId = appId;
+                    
+                    window.doc = doc;
+                    window.setDoc = setDoc;
+                    window.getDoc = getDoc;
+                    
+                    if (window.loadHighScores) window.loadHighScores();
+
+                } else {
+                    console.error("Firebase configuration is missing. Running in local mode.");
+                    window.firebaseInitialized = false;
+                    setTimeout(window.loadHighScores, 1000); 
+                }
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                window.firebaseInitialized = false;
+                setTimeout(window.loadHighScores, 1000); 
+            }
+        }
+
+        initializeFirebase();
+    </script>
+
+    <style>
+        /* 1年生向けデザイン調整 */
+        body {
+            font-family: 'Rounded Mplus 1p', sans-serif; /* メインフォント */
+            background-color: #FFFDE7; /* ベースカラーを明るいクリームイエローに */
+            color: #333333; /* テキストを濃いグレーに */
+        }
+        .main-font {
+            font-family: 'Rounded Mplus 1p', sans-serif;
+        }
+        
+        /* ボタンデザインの変更 */
+        .btn {
+            @apply w-full text-white font-extrabold py-3 px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4;
+        }
+        .btn-green {
+            @apply bg-primary-green hover:bg-emerald-600 focus:ring-emerald-300 shadow-emerald-500/50;
+        }
+        .btn-blue {
+            @apply bg-primary-blue hover:bg-sky-600 focus:ring-sky-300 shadow-sky-500/50;
+        }
+        
+        /* 入力ボックスの調整 */
+        input[type=number] {
+            /* 文字サイズを一段階縮小 */
+            @apply text-text-dark border-primary-blue focus:ring-primary-blue;
+            -moz-appearance: textfield;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        /* タイトル装飾 */
+        .title-text {
+            /* 文字を太く、少し立体的で元気な印象に */
+            color: #E74C3C; /* 赤 */
+            text-shadow: 
+                -2px -2px 0 #F1C40F, /* 上左の影（黄色） */
+                2px -2px 0 #F1C40F, /* 上右の影 */
+                -2px 2px 0 #F1C40F, /* 下左の影 */
+                2px 2px 0 #F1C40F; /* 下右の影 */
+            letter-spacing: 2px;
+        }
+
+        /* ユーザーID表示を左下に固定 */
+        #user-id-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            padding: 8px;
+            font-size: 0.75rem; /* text-xs */
+            color: #9CA3AF; /* gray-400 */
+            background-color: #F9FAFB; /* gray-50 */
+            border-top-right-radius: 8px;
+            z-index: 50;
+        }
+
+        /* スタートボタンのコンテナデザイン */
+        .start-btn-container {
+            position: relative;
+            padding: 2rem; /* パディングを少し縮小 */
+            border: 4px dashed #F1C40F; /* 黄色の点線で強調 */
+            background-color: #FEFCE8; /* 薄い黄色 */
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="text-text-dark">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-2xl">
+        <header class="text-center mb-6 pt-2 pb-4">
+            <!-- 鉛筆とノートのアイコンを削除 -->
+            <h1 class="main-font title-text text-3xl sm:text-4xl font-extrabold mb-1">
+                <!-- タイトルを強調 -->
+                100までの たしざんチャレンジ！
+            </h1>
+            <p class="main-font text-base sm:text-lg text-primary-blue font-bold">
+                <!-- サイズを lg/xl から base/lg に縮小 -->
+                30もんに チャレンジ！
+            </p>
+        </header>
+
+        <!-- ハイスコアとベストタイムの表示 -->
+        <div class="flex justify-center sm:justify-end items-center text-sm bg-white p-3 rounded-xl shadow-md border-2 border-primary-blue/50 mb-6">
+            <div class="text-center">
+                <p class="font-extrabold text-amber-700 text-sm">ハイスコア</p>
+                <span id="high-score-display" class="font-extrabold text-lg text-amber-800">0 / 30</span>
+            </div>
+            <div class="w-px h-8 bg-gray-300 mx-3"></div>
+            <div class="text-center">
+                <p class="font-extrabold text-gray-700 text-sm">ベストタイム</p>
+                <span id="best-time-display" class="font-extrabold text-lg text-primary-blue">--</span>
+            </div>
+        </div>
+
+        <main id="app-container" class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 relative border-4 border-primary-green/50">
+            <div id="loading-overlay" class="loading-overlay hidden">
+                <p class="main-font text-2xl font-extrabold text-primary-blue">じゅんびちゅう...</p>
+            </div>
+
+            <!-- Start Section (応援要素なし) -->
+            <div id="start-section" class="hidden text-center p-2">
+                <div class="start-btn-container">
+                    <button id="start-new-btn" class="btn btn-blue main-font text-2xl py-4 px-10 transform hover:scale-105 transition-all duration-300">
+                        <!-- ボタンサイズを縮小 -->
+                        さあ、 はじめよう！
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Section -->
+            <div id="quiz-section" class="hidden">
+                <div id="progress-text" class="main-font text-xl sm:text-2xl font-extrabold text-primary-blue text-center mb-3 p-2 bg-primary-blue/10 rounded-lg">
+                    <!-- サイズを 2xl/3xl から xl/2xl に縮小 -->
+                    もんだい 1 / 30
+                </div>
+
+                <div class="w-full bg-primary-blue/30 rounded-full h-3 mb-5">
+                    <!-- プログレスバーの高さを縮小 -->
+                    <div id="progress-bar" class="bg-primary-blue h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                
+                <div class="flex justify-between items-center mb-5 text-sm sm:text-base font-bold">
+                    <!-- スコアとタイマーの文字サイズを縮小 -->
+                    <div id="score-text" class="text-primary-green text-lg">せいかい: 0</div>
+                    <div id="timer-display" class="main-font text-2xl text-red-600 border-2 border-red-600 p-1 rounded-md">
+                        0:00.0
+                    </div>
+                </div>
+
+                <div id="question-container" class="bg-primary-blue/10 text-center p-6 sm:p-10 rounded-xl mb-6 shadow-inner border-4 border-primary-blue">
+                    <!-- サイズを 5xl/6xl から 4xl/5xl に縮小 -->
+                    <p id="question-text" class="main-font text-4xl sm:text-5xl font-extrabold tracking-wider text-primary-blue">0 + 0 =</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-3 mb-5">
+                    <input type="number" id="answer-input" class="w-full sm:flex-1 main-font text-3xl text-center p-3 border-4 rounded-xl focus:ring-4 placeholder-gray-400" placeholder="こたえをいれてね">
+                    <button id="check-btn" class="btn btn-green main-font text-xl sm:w-auto py-3">
+                        こたえあわせ！
+                    </button>
+                </div>
+
+                <div id="feedback-container" class="h-14 text-center flex items-center justify-center mb-3">
+                    <p id="feedback-text" class="main-font font-extrabold"></p>
+                </div>
+
+                <div class="text-center mt-3 flex justify-center gap-3">
+                    <button id="end-quiz-btn" class="btn bg-gray-400 hover:bg-gray-500 focus:ring-gray-300 main-font text-base py-2 sm:w-auto shadow-none">
+                        やめる
+                    </button>
+                    <button id="next-btn" class="btn btn-blue main-font text-xl sm:w-auto py-3 hidden">
+                        つぎのもんだいへ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section (30問完了時) -->
+            <div id="results-section" class="hidden text-center">
+                <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-primary-blue mb-4">けっか はっぴょう！</h2>
+                <div class="bg-yellow-100 p-6 rounded-xl mb-6 border-4 border-amber-500 shadow-xl">
+                    <!-- サイズを 5xl/6xl から 4xl/5xl に縮小 -->
+                    <p id="final-score-text" class="main-font text-4xl sm:text-5xl font-extrabold text-amber-800"></p>
+                    <p id="final-time-text" class="main-font text-2xl font-bold text-primary-blue mt-3">タイム: -</p>
+                    <p id="final-message" class="mt-3 text-amber-700 text-xl font-bold"></p>
+                    <p id="high-score-message" class="mt-3 text-primary-green font-extrabold text-2xl hidden">
+                        ✨ ハイスコア こうしん！すごい！ ✨
+                    </p>
+                </div>
+                
+                <div id="mistakes-container" class="mb-6 hidden">
+                    <h3 class="main-font text-lg font-extrabold text-text-dark mb-3">
+                        まちがえた もんだい (<span id="mistake-count" class="text-red-500"></span>もん)
+                    </h3>
+                    <!-- リストの高さを max-h-48 から max-h-40 に、テキストサイズを lg から base に縮小 -->
+                    <ul id="mistakes-list" class="text-left bg-red-50 p-3 rounded-lg max-h-40 overflow-y-auto border-2 border-red-300 text-base"></ul>
+                </div>
+
+                <!-- 30問終了時は「ホームへ戻る」ボタンに変更 -->
+                <button id="go-to-home-btn" class="btn btn-blue main-font text-xl py-4">
+                    ホームへ戻る
+                </button>
+            </div>
+            
+            <!-- Mid-Quit Result Section (途中終了時) -->
+            <div id="mid-quit-section" class="hidden text-center">
+                <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-red-700 mb-4">チャレンジ ちゅうし</h2>
+                <div class="bg-red-100 p-6 rounded-xl mb-6 border-4 border-red-500 shadow-xl">
+                    <p class="main-font text-xl text-red-800 font-bold mb-2">これまでのせいせき</p>
+                    <p id="mid-quit-score-text" class="main-font text-3xl sm:text-4xl font-extrabold text-red-800"></p>
+                </div>
+                <p class="text-gray-600 mb-6 text-base font-bold">
+                    ハイスコアは こうしん されないよ。
+                </p>
+                <button id="restart-from-quit-btn" class="btn btn-blue main-font text-xl py-4">
+                    さあ、はじめよう！
+                </button>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ユーザーIDを画面左下（フッター）に表示 -->
+    <footer id="user-id-footer">
+        <span id="user-id-display">ユーザーID: ロード中...</span>
+    </footer>
+
+    <script>
+        const TOTAL_QUESTIONS = 30;
+
+        let questions = [];
+        let state = {
+            currentQuestionIndex: 0,
+            score: 0,
+            mistakes: [],
+            totalQuestions: TOTAL_QUESTIONS,
+            isQuizActive: false,
+            startTime: null,
+            elapsedTime: 0,
+        };
+        let highScore = { score: 0, time: Infinity }; 
+        let timerInterval;
+
+        const elements = {
+            loadingOverlay: document.getElementById('loading-overlay'),
+            startSection: document.getElementById('start-section'),
+            startNewBtn: document.getElementById('start-new-btn'),
+            
+            quizSection: document.getElementById('quiz-section'),
+            resultsSection: document.getElementById('results-section'),
+            midQuitSection: document.getElementById('mid-quit-section'),
+            midQuitScoreText: document.getElementById('mid-quit-score-text'),
+            restartFromQuitBtn: document.getElementById('restart-from-quit-btn'),
+            progressText: document.getElementById('progress-text'),
+            scoreText: document.getElementById('score-text'),
+            progressBar: document.getElementById('progress-bar'),
+            timerDisplay: document.getElementById('timer-display'), 
+            questionText: document.getElementById('question-text'),
+            answerInput: document.getElementById('answer-input'),
+            checkBtn: document.getElementById('check-btn'),
+            feedbackText: document.getElementById('feedback-text'),
+            nextBtn: document.getElementById('next-btn'),
+            endQuizBtn: document.getElementById('end-quiz-btn'),
+
+            highScoreDisplay: document.getElementById('high-score-display'), 
+            bestTimeDisplay: document.getElementById('best-time-display'), 
+            userIdDisplay: document.getElementById('user-id-display'), 
+
+            finalScoreText: document.getElementById('final-score-text'),
+            finalTimeText: document.getElementById('final-time-text'), 
+            finalMessage: document.getElementById('final-message'),
+            highScoreMessage: document.getElementById('high-score-message'),
+            mistakesContainer: document.getElementById('mistakes-container'),
+            mistakeCount: document.getElementById('mistake-count'),
+            mistakesList: document.getElementById('mistakes-list'),
+            // 修正：ボタンIDを「ホームへ戻る」に合わせた名前に変更
+            goToHomeBtn: document.getElementById('go-to-home-btn'), 
+        };
+        
+        window.onload = function() {
+            elements.loadingOverlay.classList.remove('hidden');
+        };
+
+        // --- Utility for Time Formatting ---
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const centiseconds = Math.floor((ms % 1000) / 100); 
+            return `${minutes}:${String(seconds).padStart(2, '0')}.${centiseconds}`;
+        }
+        
+        function updateTimerDisplay() {
+            if (state.startTime) {
+                state.elapsedTime = Date.now() - state.startTime;
+            }
+            elements.timerDisplay.textContent = formatTime(state.elapsedTime);
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            state.startTime = Date.now() - state.elapsedTime; 
+            timerInterval = setInterval(updateTimerDisplay, 100);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // --- Firebase/Firestore Logic ---
+
+        window.loadHighScores = async function() {
+            elements.userIdDisplay.textContent = window.userId ? `ユーザーID: ${window.userId}` : 'ユーザーID: (ローカルモード)';
+
+            try {
+                if (!window.firebaseInitialized || !window.doc || !window.getDoc) {
+                    highScore = { score: 0, time: Infinity };
+                } else {
+                    const db = window.db;
+                    const userId = window.userId;
+                    const appId = window.appId;
+
+                    const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
+                    const docSnap = await getDoc(scoreRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        highScore.score = data.score || 0;
+                        highScore.time = data.time || Infinity;
+                    } else {
+                        highScore = { score: 0, time: Infinity };
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading high score:", error);
+                highScore = { score: 0, time: Infinity };
+            } finally {
+                const timeDisplay = highScore.time === Infinity ? '--' : formatTime(highScore.time);
+                elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
+                elements.bestTimeDisplay.textContent = timeDisplay;
+                showStartSection();
+            }
+        }
+
+        async function saveHighScore(newScore, newTime) {
+            // 途中終了の場合は保存しない（isMidQuitがtrueの場合、この関数は呼ばれないはずだが、念のためロジックを修正）
+            // 修正: 満点(TOTAL_QUESTIONS)でなくても、スコアが上がれば、または同スコアでタイムが良ければ保存する
+            
+            if (!window.firebaseInitialized || !window.doc || !window.setDoc) return false;
+            
+            let isNewHighScore = false;
+            if (newScore > highScore.score) {
+                isNewHighScore = true;
+            } else if (newScore === highScore.score && newTime < highScore.time) {
+                // スコアが同点の場合、タイムが速ければ更新
+                isNewHighScore = true;
+            }
+
+            if (!isNewHighScore) return false;
+
+            const db = window.db;
+            const userId = window.userId;
+            const appId = window.appId;
+            const scoreRef = doc(db, `artifacts/${appId}/users/${userId}/quiz_data`, 'high_score');
+            
+            try {
+                await setDoc(scoreRef, { score: newScore, time: newTime, timestamp: new Date().getTime() }, { merge: true });
+                highScore.score = newScore;
+                highScore.time = newTime;
+                
+                const timeDisplay = formatTime(highScore.time);
+                elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
+                elements.bestTimeDisplay.textContent = timeDisplay;
+
+                return true;
+            } catch (error) {
+                console.error("Error saving high score:", error);
+                return false;
+            }
+        }
+
+        // --- Quiz Logic ---
+
+        function generateRandomQuestions() {
+            const newQuestions = [];
+            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+                let a, b, q, answer;
+                
+                // 答えが100を超えない 2桁 + 1桁 の問題を生成 (10-99 + 1-9)
+                do {
+                    a = Math.floor(Math.random() * 90) + 10; 
+                    b = Math.floor(Math.random() * 9) + 1;  
+                    answer = a + b;
+                } while (answer > 100);
+
+                q = `${a} + ${b}`;
+                newQuestions.push({ q, a: answer });
+            }
+            return newQuestions;
+        }
+
+        function startNewQuiz() {
+            questions = generateRandomQuestions();
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.mistakes = [];
+            state.totalQuestions = questions.length;
+            state.elapsedTime = 0; 
+            state.isQuizActive = true;
+            
+            elements.startSection.classList.add('hidden');
+            elements.resultsSection.classList.add('hidden');
+            elements.midQuitSection.classList.add('hidden');
+            elements.quizSection.classList.remove('hidden');
+            
+            startTimer();
+            renderQuestion();
+            updateScore();
+            updateProgress();
+        }
+
+        function renderQuestion() {
+            const question = questions[state.currentQuestionIndex];
+            elements.questionText.textContent = question.q + " = ";
+            elements.answerInput.value = '';
+            elements.answerInput.focus();
+            elements.feedbackText.textContent = '';
+            elements.nextBtn.classList.add('hidden');
+            elements.checkBtn.classList.remove('hidden');
+            elements.checkBtn.disabled = false;
+        }
+
+        function updateProgress() {
+            elements.progressText.textContent = `もんだい ${state.currentQuestionIndex + 1} / ${state.totalQuestions}`;
+            const progressPercentage = ((state.currentQuestionIndex) / state.totalQuestions) * 100;
+            elements.progressBar.style.width = `${progressPercentage}%`;
+        }
+        
+        function updateScore() {
+            elements.scoreText.textContent = `せいかい: ${state.score}`;
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(elements.answerInput.value, 10);
+            if (isNaN(userAnswer)) {
+                elements.feedbackText.textContent = '❌ かずを いれてね！';
+                elements.feedbackText.className = 'main-font text-2xl font-extrabold text-red-500';
+                return;
+            }
+
+            const correctAnswer = questions[state.currentQuestionIndex].a;
+            
+            elements.checkBtn.disabled = true;
+
+            if (userAnswer === correctAnswer) {
+                state.score++;
+                elements.feedbackText.textContent = 'やったね！せいかい！🎉';
+                elements.feedbackText.className = 'main-font text-3xl font-extrabold text-primary-green';
+            } else {
+                elements.feedbackText.textContent = `ざんねん… こたえは ${correctAnswer}だよ`;
+                elements.feedbackText.className = 'main-font text-2xl font-extrabold text-red-500';
+                state.mistakes.push({
+                    question: questions[state.currentQuestionIndex].q,
+                    correctAnswer: correctAnswer,
+                    userAnswer: userAnswer,
+                    index: state.currentQuestionIndex + 1
+                });
+            }
+            
+            updateScore();
+            elements.checkBtn.classList.add('hidden');
+            elements.nextBtn.classList.remove('hidden');
+            elements.nextBtn.focus();
+        }
+
+        function nextQuestion() {
+            const progressPercentage = ((state.currentQuestionIndex + 1) / state.totalQuestions) * 100;
+            elements.progressBar.style.width = `${progressPercentage}%`;
+
+            state.currentQuestionIndex++;
+            if (state.currentQuestionIndex < state.totalQuestions) {
+                renderQuestion();
+                updateProgress();
+            } else {
+                showResults(false); // 全問終了
+            }
+        }
+
+        function endQuiz() {
+            if (state.isQuizActive) {
+                showResults(true); // 途中終了
+            }
+        }
+
+        async function showResults(isMidQuit) {
+            stopTimer(); 
+            state.isQuizActive = false;
+
+            elements.quizSection.classList.add('hidden');
+            elements.highScoreMessage.classList.add('hidden'); 
+            
+            if (isMidQuit) {
+                // 途中終了画面
+                elements.resultsSection.classList.add('hidden');
+                elements.midQuitSection.classList.remove('hidden');
+                
+                // 途中終了の場合はスコアを反映しない
+                const totalAnswered = state.currentQuestionIndex + 1; 
+                const displayAnswered = totalAnswered > 0 ? totalAnswered : 0; 
+
+                const quitScoreText = `${displayAnswered}もんだいのうち ${state.score}もん せいかい！ (${state.score}/${displayAnswered})`;
+                elements.midQuitScoreText.textContent = quitScoreText;
+
+            } else {
+                // 30問完了画面
+                elements.midQuitSection.classList.add('hidden');
+                elements.resultsSection.classList.remove('hidden');
+
+                elements.finalScoreText.textContent = `ぜんぶで ${state.score}もん せいかい！`;
+                elements.finalTimeText.textContent = `タイム: ${formatTime(state.elapsedTime)}`;
+                
+                let message = '';
+                if (state.score === state.totalQuestions) {
+                    message = 'たいへん よく できました！ えらいね！💯';
+                } else if (state.score >= state.totalQuestions * 0.8) {
+                    message = 'あとすこし！つぎは まんてんを めざそう！';
+                } else {
+                    message = 'どんまい！ ゆっくり がんばろうね！';
+                }
+                elements.finalMessage.textContent = message;
+                
+                // 修正: 30問完走時は必ずハイスコアをチェックし、更新されていれば保存する
+                const isHighScore = await saveHighScore(state.score, state.elapsedTime);
+                if (isHighScore) {
+                    elements.highScoreMessage.classList.remove('hidden');
+                }
+
+                if (state.mistakes.length === 0) {
+                    elements.mistakesContainer.classList.add('hidden');
+                } else {
+                    elements.mistakesContainer.classList.remove('hidden');
+                    elements.mistakeCount.textContent = state.mistakes.length;
+                    elements.mistakesList.innerHTML = '';
+                    state.mistakes.forEach(mistake => {
+                        const li = document.createElement('li');
+                        li.className = 'main-font mb-2 p-2 bg-red-100 rounded text-base border border-red-300';
+                        li.innerHTML = `<span class="font-extrabold text-red-600">${mistake.index}.</span> ${mistake.question} の こたえは <span class="font-extrabold text-primary-blue">${mistake.correctAnswer}</span> だよ。`;
+                        elements.mistakesList.appendChild(li);
+                    });
+                }
+            }
+        }
+
+        function showStartSection() {
+            state.elapsedTime = 0;
+            updateTimerDisplay();
+
+            elements.quizSection.classList.add('hidden');
+            elements.resultsSection.classList.add('hidden');
+            elements.midQuitSection.classList.add('hidden');
+            
+            elements.loadingOverlay.classList.add('hidden');
+            elements.startSection.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+
+        elements.checkBtn.addEventListener('click', checkAnswer);
+        elements.answerInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                if (!elements.checkBtn.classList.contains('hidden')) {
+                    checkAnswer();
+                } else if (!elements.nextBtn.classList.contains('hidden')) {
+                    nextQuestion();
+                }
+            }
+        });
+        elements.nextBtn.addEventListener('click', nextQuestion);
+        elements.endQuizBtn.addEventListener('click', endQuiz);
+        elements.startNewBtn.addEventListener('click', startNewQuiz);
+        // 修正: 30問完了後のボタンをホームへ戻るに変更
+        elements.goToHomeBtn.addEventListener('click', showStartSection); 
+        elements.restartFromQuitBtn.addEventListener('click', startNewQuiz);
+
+        // Initial setup check
+        if (!window.firebaseInitialized) {
+            elements.loadingOverlay.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
