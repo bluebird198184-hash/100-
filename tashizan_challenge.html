@@ -112,7 +112,11 @@
         /* 1年生向けデザイン調整 */
         body {
             font-family: 'Rounded Mplus 1p', sans-serif; /* メインフォント */
-            background-color: #FFFDE7; /* ベースカラーを明るいクリームイエローに */
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(255, 226, 116, 0.65), transparent 28rem),
+                radial-gradient(circle at top right, rgba(126, 211, 255, 0.55), transparent 24rem),
+                linear-gradient(180deg, #FFF7C8 0%, #E8F7FF 52%, #FFFDE7 100%);
             color: #333333; /* テキストを濃いグレーに */
         }
         .main-font {
@@ -121,13 +125,15 @@
         
         /* ボタンデザインの変更 */
         .btn {
-            @apply w-full text-white font-extrabold py-3 px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4;
+            @apply w-full text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg transition-transform transform hover:-translate-y-0.5 hover:scale-[1.02] active:translate-y-1 active:scale-[0.98] focus:outline-none focus:ring-4;
+            min-height: 56px;
+            border-bottom: 5px solid rgba(0, 0, 0, 0.18);
         }
         .btn-green {
-            @apply bg-primary-green hover:bg-emerald-600 focus:ring-emerald-300 shadow-emerald-500/50;
+            @apply bg-primary-green hover:bg-emerald-600 focus:ring-emerald-300 shadow-emerald-500/40;
         }
         .btn-blue {
-            @apply bg-primary-blue hover:bg-sky-600 focus:ring-sky-300 shadow-sky-500/50;
+            @apply bg-primary-blue hover:bg-sky-600 focus:ring-sky-300 shadow-sky-500/40;
         }
         
         /* 入力ボックスの調整 */
@@ -142,17 +148,29 @@
             margin: 0;
         }
 
+        #answer-input {
+            min-height: 76px;
+            background: #FFFFFF;
+            box-shadow: inset 0 3px 0 rgba(78, 152, 244, 0.12), 0 10px 18px rgba(78, 152, 244, 0.12);
+        }
+
+        #answer-input::placeholder {
+            color: #9CA3AF;
+            font-size: 1.15rem;
+        }
+
         .loading-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.86);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10;
+            border-radius: 1.5rem;
         }
         
         /* タイトル装飾 */
@@ -160,11 +178,50 @@
             /* 文字を太く、少し立体的で元気な印象に */
             color: #E74C3C; /* 赤 */
             text-shadow: 
-                -2px -2px 0 #F1C40F, /* 上左の影（黄色） */
-                2px -2px 0 #F1C40F, /* 上右の影 */
-                -2px 2px 0 #F1C40F, /* 下左の影 */
-                2px 2px 0 #F1C40F; /* 下右の影 */
+                -2px -2px 0 #FDE68A, /* 上左の影（黄色） */
+                2px -2px 0 #FDE68A, /* 上右の影 */
+                -2px 2px 0 #FDE68A, /* 下左の影 */
+                2px 2px 0 #FDE68A, /* 下右の影 */
+                0 7px 16px rgba(231, 76, 60, 0.20);
             letter-spacing: 2px;
+            line-height: 1.25;
+        }
+
+        #app-container {
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 22px 45px rgba(78, 152, 244, 0.18);
+        }
+
+        #progress-text {
+            border: 2px solid rgba(78, 152, 244, 0.25);
+        }
+
+        #question-container {
+            background: linear-gradient(135deg, #EBF5FF 0%, #F4FBFF 100%);
+            box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.9), 0 14px 24px rgba(78, 152, 244, 0.16);
+        }
+
+        #question-text {
+            line-height: 1.2;
+            word-break: keep-all;
+        }
+
+        #timer-display,
+        #score-text {
+            background: #FFFFFF;
+            border-radius: 999px;
+            padding: 0.45rem 0.9rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+        }
+
+        #results-section > div:first-of-type,
+        #mid-quit-section > div:first-of-type {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FFF7ED 100%);
+            box-shadow: 0 18px 32px rgba(245, 158, 11, 0.20);
+        }
+
+        #final-score-text {
+            line-height: 1.25;
         }
 
         /* ユーザーID表示を左下に固定 */
@@ -175,7 +232,7 @@
             padding: 8px;
             font-size: 0.75rem; /* text-xs */
             color: #9CA3AF; /* gray-400 */
-            background-color: #F9FAFB; /* gray-50 */
+            background-color: rgba(249, 250, 251, 0.85); /* gray-50 */
             border-top-right-radius: 8px;
             z-index: 50;
         }
@@ -185,47 +242,82 @@
             position: relative;
             padding: 2rem; /* パディングを少し縮小 */
             border: 4px dashed #F1C40F; /* 黄色の点線で強調 */
-            background-color: #FEFCE8; /* 薄い黄色 */
-            border-radius: 20px;
+            background: linear-gradient(135deg, #FFFBEB 0%, #EFF6FF 100%);
+            border-radius: 24px;
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 12px 22px rgba(241, 196, 15, 0.18);
+        }
+
+        @media (max-width: 640px) {
+            .title-text {
+                letter-spacing: 1px;
+                text-shadow:
+                    -1.5px -1.5px 0 #FDE68A,
+                    1.5px -1.5px 0 #FDE68A,
+                    -1.5px 1.5px 0 #FDE68A,
+                    1.5px 1.5px 0 #FDE68A;
+            }
+
+            #question-container {
+                padding: 1.5rem 1rem;
+            }
+
+            #question-text {
+                font-size: 2.6rem;
+            }
+
+            #answer-input {
+                min-height: 68px;
+                font-size: 2rem;
+            }
+
+            .btn {
+                min-height: 54px;
+            }
+
+            #timer-display,
+            #score-text {
+                font-size: 1rem;
+                padding: 0.4rem 0.75rem;
+            }
         }
     </style>
 </head>
 <body class="text-text-dark">
 
-    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-2xl">
-        <header class="text-center mb-6 pt-2 pb-4">
+    <div class="container mx-auto px-3 py-4 sm:p-6 md:p-8 max-w-3xl">
+        <header class="text-center mb-5 sm:mb-6 pt-2 pb-3">
             <!-- 鉛筆とノートのアイコンを削除 -->
-            <h1 class="main-font title-text text-3xl sm:text-4xl font-extrabold mb-1">
+            <h1 class="main-font title-text text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">
                 <!-- タイトルを強調 -->
                 100までの たしざんチャレンジ！
             </h1>
-            <p class="main-font text-base sm:text-lg text-primary-blue font-bold">
+            <p class="inline-block main-font text-base sm:text-lg text-primary-blue font-bold bg-white/85 px-5 py-2 rounded-full shadow-sm border-2 border-primary-blue/20">
                 <!-- サイズを lg/xl から base/lg に縮小 -->
                 10もんに チャレンジ！
             </p>
         </header>
 
         <!-- ハイスコアとベストタイムの表示 -->
-        <div class="flex justify-center sm:justify-end items-center text-sm bg-white p-3 rounded-xl shadow-md border-2 border-primary-blue/50 mb-6">
-            <div class="text-center">
+        <div class="flex justify-center sm:justify-end items-center text-sm bg-white/90 p-3 rounded-2xl shadow-md border-2 border-primary-blue/30 mb-5 sm:mb-6">
+            <div class="text-center min-w-[92px]">
                 <p class="font-extrabold text-amber-700 text-sm">ハイスコア</p>
                 <span id="high-score-display" class="font-extrabold text-lg text-amber-800">0 / 10</span>
             </div>
-            <div class="w-px h-8 bg-gray-300 mx-3"></div>
-            <div class="text-center">
+            <div class="w-px h-10 bg-gray-300 mx-3"></div>
+            <div class="text-center min-w-[92px]">
                 <p class="font-extrabold text-gray-700 text-sm">ベストタイム</p>
                 <span id="best-time-display" class="font-extrabold text-lg text-primary-blue">--</span>
             </div>
         </div>
 
-        <main id="app-container" class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 relative border-4 border-primary-green/50">
+        <main id="app-container" class="bg-white rounded-3xl shadow-2xl p-4 sm:p-7 md:p-8 relative border-4 border-primary-green/40">
             <!-- 修正: 初期状態でローディングを表示 -->
             <div id="loading-overlay" class="loading-overlay"> 
                 <p class="main-font text-2xl font-extrabold text-primary-blue">じゅんびちゅう...</p>
             </div>
 
             <!-- Start Section (応援要素なし) -->
-            <div id="start-section" class="hidden text-center p-2">
+            <div id="start-section" class="hidden text-center p-1 sm:p-2">
                 <div class="start-btn-container">
                     <button id="start-new-btn" class="btn btn-blue main-font text-2xl py-4 px-10 transform hover:scale-105 transition-all duration-300">
                         <!-- ボタンサイズを縮小 -->
@@ -236,41 +328,41 @@
 
             <!-- Quiz Section -->
             <div id="quiz-section" class="hidden">
-                <div id="progress-text" class="main-font text-xl sm:text-2xl font-extrabold text-primary-blue text-center mb-3 p-2 bg-primary-blue/10 rounded-lg">
+                <div id="progress-text" class="main-font text-lg sm:text-2xl font-extrabold text-primary-blue text-center mb-3 p-3 bg-primary-blue/10 rounded-2xl">
                     <!-- サイズを 2xl/3xl から xl/2xl に縮小 -->
                     もんだい 1 / 10
                 </div>
 
-                <div class="w-full bg-primary-blue/30 rounded-full h-3 mb-5">
+                <div class="w-full bg-primary-blue/20 rounded-full h-4 mb-5 p-1">
                     <!-- プログレスバーの高さを縮小 -->
-                    <div id="progress-bar" class="bg-primary-blue h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div id="progress-bar" class="bg-primary-blue h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 
-                <div class="flex justify-between items-center mb-5 text-sm sm:text-base font-bold">
+                <div class="flex justify-between items-center gap-2 mb-5 text-sm sm:text-base font-bold">
                     <!-- スコアとタイマーの文字サイズを縮小 -->
                     <div id="score-text" class="text-primary-green text-lg">せいかい: 0</div>
-                    <div id="timer-display" class="main-font text-2xl text-red-600 border-2 border-red-600 p-1 rounded-md">
+                    <div id="timer-display" class="main-font text-xl sm:text-2xl text-red-600 border-2 border-red-500 p-1 rounded-md">
                         0:00.0
                     </div>
                 </div>
 
-                <div id="question-container" class="bg-primary-blue/10 text-center p-6 sm:p-10 rounded-xl mb-6 shadow-inner border-4 border-primary-blue">
+                <div id="question-container" class="bg-primary-blue/10 text-center p-6 sm:p-10 rounded-3xl mb-5 sm:mb-6 shadow-inner border-4 border-primary-blue/70">
                     <!-- サイズを 5xl/6xl から 4xl/5xl に縮小 -->
-                    <p id="question-text" class="main-font text-4xl sm:text-5xl font-extrabold tracking-wider text-primary-blue">0 + 0 =</p>
+                    <p id="question-text" class="main-font text-5xl sm:text-6xl font-extrabold tracking-wider text-primary-blue">0 + 0 =</p>
                 </div>
 
-                <div class="flex flex-col sm:flex-row items-center gap-3 mb-5">
-                    <input type="number" id="answer-input" class="w-full sm:flex-1 main-font text-3xl text-center p-3 border-4 rounded-xl focus:ring-4 placeholder-gray-400" placeholder="こたえをいれてね">
-                    <button id="check-btn" class="btn btn-green main-font text-xl sm:w-auto py-3">
+                <div class="flex flex-col sm:flex-row items-stretch gap-3 mb-5">
+                    <input type="number" id="answer-input" class="w-full sm:flex-1 main-font text-3xl sm:text-4xl text-center p-3 border-4 rounded-2xl focus:ring-4 placeholder-gray-400" placeholder="こたえをいれてね">
+                    <button id="check-btn" class="btn btn-green main-font text-xl sm:w-auto sm:min-w-[170px] py-3">
                         こたえあわせ！
                     </button>
                 </div>
 
-                <div id="feedback-container" class="h-14 text-center flex items-center justify-center mb-3">
+                <div id="feedback-container" class="min-h-[3.5rem] text-center flex items-center justify-center mb-3 px-2">
                     <p id="feedback-text" class="main-font font-extrabold"></p>
                 </div>
 
-                <div class="text-center mt-3 flex justify-center gap-3">
+                <div class="text-center mt-3 flex flex-col sm:flex-row justify-center gap-3">
                     <button id="end-quiz-btn" class="btn bg-gray-400 hover:bg-gray-500 focus:ring-gray-300 main-font text-base py-2 sm:w-auto shadow-none">
                         やめる
                     </button>
@@ -282,13 +374,13 @@
 
             <!-- Results Section (10問完了時) -->
             <div id="results-section" class="hidden text-center">
-                <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-primary-blue mb-4">けっか はっぴょう！</h2>
-                <div class="bg-yellow-100 p-6 rounded-xl mb-6 border-4 border-amber-500 shadow-xl">
+                <h2 class="main-font text-2xl sm:text-4xl font-extrabold text-primary-blue mb-4">けっか はっぴょう！</h2>
+                <div class="bg-yellow-100 p-5 sm:p-7 rounded-3xl mb-6 border-4 border-amber-500 shadow-xl">
                     <!-- サイズを 5xl/6xl から 4xl/5xl に縮小 -->
                     <p id="final-score-text" class="main-font text-4xl sm:text-5xl font-extrabold text-amber-800"></p>
-                    <p id="final-time-text" class="main-font text-2xl font-bold text-primary-blue mt-3">タイム: -</p>
-                    <p id="final-message" class="mt-3 text-amber-700 text-xl font-bold"></p>
-                    <p id="high-score-message" class="mt-3 text-primary-green font-extrabold text-2xl hidden">
+                    <p id="final-time-text" class="main-font text-xl sm:text-2xl font-bold text-primary-blue mt-3">タイム: -</p>
+                    <p id="final-message" class="mt-3 text-amber-700 text-lg sm:text-xl font-bold"></p>
+                    <p id="high-score-message" class="mt-3 text-primary-green font-extrabold text-xl sm:text-2xl hidden">
                         ✨ ハイスコア こうしん！すごい！ ✨
                     </p>
                 </div>
@@ -298,7 +390,7 @@
                         まちがえた もんだい (<span id="mistake-count" class="text-red-500"></span>もん)
                     </h3>
                     <!-- リストの高さを max-h-48 から max-h-40 に、テキストサイズを lg から base に縮小 -->
-                    <ul id="mistakes-list" class="text-left bg-red-50 p-3 rounded-lg max-h-40 overflow-y-auto border-2 border-red-300 text-base"></ul>
+                    <ul id="mistakes-list" class="text-left bg-red-50 p-3 rounded-2xl max-h-40 overflow-y-auto border-2 border-red-300 text-base"></ul>
                 </div>
 
                 <!-- 10問終了時は「ホームへ戻る」ボタンに変更 -->
@@ -310,7 +402,7 @@
             <!-- Mid-Quit Result Section (途中終了時) -->
             <div id="mid-quit-section" class="hidden text-center">
                 <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-red-700 mb-4">チャレンジ ちゅうし</h2>
-                <div class="bg-red-100 p-6 rounded-xl mb-6 border-4 border-red-500 shadow-xl">
+                <div class="bg-red-100 p-5 sm:p-6 rounded-3xl mb-6 border-4 border-red-500 shadow-xl">
                     <p class="main-font text-xl text-red-800 font-bold mb-2">これまでのせいせき</p>
                     <p id="mid-quit-score-text" class="main-font text-3xl sm:text-4xl font-extrabold text-red-800"></p>
                 </div>
