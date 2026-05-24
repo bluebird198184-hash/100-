@@ -201,7 +201,7 @@
             </h1>
             <p class="main-font text-base sm:text-lg text-primary-blue font-bold">
                 <!-- サイズを lg/xl から base/lg に縮小 -->
-                30もんに チャレンジ！
+                10もんに チャレンジ！
             </p>
         </header>
 
@@ -209,7 +209,7 @@
         <div class="flex justify-center sm:justify-end items-center text-sm bg-white p-3 rounded-xl shadow-md border-2 border-primary-blue/50 mb-6">
             <div class="text-center">
                 <p class="font-extrabold text-amber-700 text-sm">ハイスコア</p>
-                <span id="high-score-display" class="font-extrabold text-lg text-amber-800">0 / 30</span>
+                <span id="high-score-display" class="font-extrabold text-lg text-amber-800">0 / 10</span>
             </div>
             <div class="w-px h-8 bg-gray-300 mx-3"></div>
             <div class="text-center">
@@ -238,7 +238,7 @@
             <div id="quiz-section" class="hidden">
                 <div id="progress-text" class="main-font text-xl sm:text-2xl font-extrabold text-primary-blue text-center mb-3 p-2 bg-primary-blue/10 rounded-lg">
                     <!-- サイズを 2xl/3xl から xl/2xl に縮小 -->
-                    もんだい 1 / 30
+                    もんだい 1 / 10
                 </div>
 
                 <div class="w-full bg-primary-blue/30 rounded-full h-3 mb-5">
@@ -280,7 +280,7 @@
                 </div>
             </div>
 
-            <!-- Results Section (30問完了時) -->
+            <!-- Results Section (10問完了時) -->
             <div id="results-section" class="hidden text-center">
                 <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-primary-blue mb-4">けっか はっぴょう！</h2>
                 <div class="bg-yellow-100 p-6 rounded-xl mb-6 border-4 border-amber-500 shadow-xl">
@@ -301,7 +301,7 @@
                     <ul id="mistakes-list" class="text-left bg-red-50 p-3 rounded-lg max-h-40 overflow-y-auto border-2 border-red-300 text-base"></ul>
                 </div>
 
-                <!-- 30問終了時は「ホームへ戻る」ボタンに変更 -->
+                <!-- 10問終了時は「ホームへ戻る」ボタンに変更 -->
                 <button id="go-to-home-btn" class="btn btn-blue main-font text-xl py-4">
                     ホームへ戻る
                 </button>
@@ -332,7 +332,8 @@
     </footer>
 
     <script>
-        const TOTAL_QUESTIONS = 30;
+        const TOTAL_QUESTIONS = 10;
+        const HIGH_SCORE_STORAGE_KEY = 'tashizan_high_score_10_questions';
         
         // --- Promiseを使ってFirebaseの初期化完了を待つ (Firebaseをスキップ) ---
         // 修正: Promise.resolve(false) を返すことで、Firebaseは未初期化として扱う
@@ -429,7 +430,7 @@
                 // FirebaseInitializedフラグに関わらず、ローカルストレージをメインとして使う
                 // --- 2. Local Storage Load (Fallback) ---
                 console.log("Loading high score from Local Storage (Firebase skipped).");
-                const localData = JSON.parse(localStorage.getItem('tashizan_high_score') || '{}');
+                const localData = JSON.parse(localStorage.getItem(HIGH_SCORE_STORAGE_KEY) || '{}');
                 highScore.score = localData.score || 0;
                 // NaNチェックとInfinityチェックを追加
                 highScore.time = isNaN(localData.time) || localData.time === Infinity ? Infinity : localData.time; 
@@ -460,7 +461,7 @@
             // 修正: Firebaseへの保存処理をスキップ
             // --- Local Storage Save ---
             console.log("Saving high score to Local Storage.");
-            localStorage.setItem('tashizan_high_score', JSON.stringify({ score: newScore, time: newTime }));
+            localStorage.setItem(HIGH_SCORE_STORAGE_KEY, JSON.stringify({ score: newScore, time: newTime }));
             
             // スコアが更新されたので、ローカル変数と表示を更新する
             highScore.score = newScore;
@@ -606,7 +607,7 @@
                 elements.midQuitScoreText.textContent = quitScoreText;
 
             } else {
-                // 30問完了画面
+                // 10問完了画面
                 elements.midQuitSection.classList.add('hidden');
                 elements.resultsSection.classList.remove('hidden');
 
@@ -623,7 +624,7 @@
                 }
                 elements.finalMessage.textContent = message;
                 
-                // 修正: 30問完走時は必ずハイスコアをチェックし、更新されていれば保存する
+                // 修正: 10問完走時は必ずハイスコアをチェックし、更新されていれば保存する
                 const isHighScore = await saveHighScore(state.score, state.elapsedTime);
                 if (isHighScore) {
                     elements.highScoreMessage.classList.remove('hidden');
