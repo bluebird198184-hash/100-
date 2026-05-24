@@ -102,15 +102,22 @@
             letter-spacing: 2px;
             line-height: 1.25;
         }
+        #header-subtitle {
+            border: 0;
+            box-shadow: 0 8px 16px rgba(78, 152, 244, 0.12);
+        }
         #app-container {
             background: rgba(255, 255, 255, 0.96);
             box-shadow: 0 22px 45px rgba(78, 152, 244, 0.18);
         }
         .home-card {
-            background: linear-gradient(135deg, #FFFBEB 0%, #FFF7ED 100%);
-            border: 4px solid rgba(251, 146, 60, 0.65);
-            border-radius: 2rem;
-            box-shadow: 0 14px 26px rgba(251, 146, 60, 0.16);
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+        }
+        .home-heading {
+            color: #2563EB;
+            line-height: 1.35;
         }
         .operation-chip {
             display: flex;
@@ -298,13 +305,12 @@
     </style>
 </head>
 <body class="text-text-dark">
-
     <div class="container mx-auto px-3 py-4 sm:p-6 md:p-8 max-w-3xl">
-        <header class="text-center mb-5 sm:mb-6 pt-2 pb-3">
-            <h1 class="main-font title-text text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">
+        <header class="text-center mb-8 sm:mb-10 pt-2 pb-2">
+            <h1 class="main-font title-text text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3">
                 100までの 計算チャレンジ！
             </h1>
-            <p id="header-subtitle" class="inline-block main-font text-base sm:text-lg text-primary-blue font-bold bg-white/85 px-5 py-2 rounded-full shadow-sm border-2 border-primary-blue/20">
+            <p id="header-subtitle" class="inline-block main-font text-base sm:text-lg text-primary-blue font-bold bg-white/85 px-5 py-2 rounded-full">
                 選んで10問にチャレンジ！
             </p>
         </header>
@@ -321,13 +327,14 @@
             </div>
         </div>
 
-        <main id="app-container" class="bg-white rounded-3xl shadow-2xl p-4 sm:p-7 md:p-8 relative border-4 border-primary-green/40">
+        <main id="app-container" class="bg-white rounded-3xl shadow-2xl p-4 sm:p-7 md:p-8 relative">
             <div id="loading-overlay" class="loading-overlay">
                 <p class="main-font text-2xl font-extrabold text-primary-blue">準備中...</p>
             </div>
 
-            <div id="home-section" class="hidden text-center p-1 sm:p-2">
-                <div class="home-card p-5 sm:p-7">
+            <div id="home-section" class="hidden text-center py-2 sm:py-4">
+                <div class="home-card px-1 sm:px-3">
+                    <h2 class="home-heading main-font text-2xl sm:text-3xl font-extrabold mb-5 sm:mb-6">どの計算にする？</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <button class="operation-btn operation-chip main-font" data-operation="addition">
                             <span class="operation-icon">＋</span>
@@ -358,7 +365,7 @@
                             </span>
                         </button>
                     </div>
-                    <div class="mt-5 flex justify-center">
+                    <div class="mt-6 flex justify-center">
                         <button id="reset-scores-btn" class="reset-score-btn main-font" type="button">
                             スコアをリセット
                         </button>
