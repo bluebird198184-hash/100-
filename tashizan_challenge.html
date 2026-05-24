@@ -65,12 +65,6 @@
         .btn-blue {
             @apply bg-primary-blue hover:bg-sky-600 focus:ring-sky-300 shadow-sky-500/40;
         }
-        .btn-orange {
-            @apply bg-orange-400 hover:bg-orange-500 focus:ring-orange-300 shadow-orange-500/40;
-        }
-        .btn-purple {
-            @apply bg-purple-500 hover:bg-purple-600 focus:ring-purple-300 shadow-purple-500/40;
-        }
         input[type=number] {
             @apply text-text-dark border-primary-blue focus:ring-primary-blue;
             -moz-appearance: textfield;
@@ -134,7 +128,7 @@
             align-items: center;
             gap: 0.9rem;
             width: 100%;
-            min-height: 86px;
+            min-height: 92px;
             padding: 1rem 1.1rem;
             border-radius: 22px;
             background: #FFFFFF;
@@ -173,12 +167,43 @@
             line-height: 1.2;
             font-weight: 800;
         }
-        .operation-note {
-            display: block;
-            margin-top: 0.25rem;
-            color: #6B7280;
+        .operation-score {
+            display: inline-block;
+            margin-top: 0.45rem;
+            padding: 0.28rem 0.65rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #4B5563;
             font-size: 0.88rem;
-            line-height: 1.35;
+            line-height: 1.25;
+            font-weight: 800;
+            border: 2px solid rgba(107, 114, 128, 0.14);
+        }
+        .reset-score-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 999px;
+            background: #FFFFFF;
+            color: #B91C1C;
+            font-weight: 800;
+            border: 2px solid rgba(239, 68, 68, 0.35);
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.12);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+        }
+        .reset-score-btn:hover,
+        .reset-score-btn:focus-visible {
+            background: #FEF2F2;
+            border-color: #EF4444;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 22px rgba(239, 68, 68, 0.18);
+            outline: none;
+        }
+        .reset-score-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 6px 12px rgba(239, 68, 68, 0.14);
         }
         .operation-card[data-operation="addition"] {
             border-color: rgba(78, 152, 244, 0.35);
@@ -287,7 +312,7 @@
                 padding: 0.65rem;
             }
             .operation-card {
-                min-height: 82px;
+                min-height: 88px;
                 padding: 0.9rem;
             }
             .operation-icon {
@@ -298,8 +323,9 @@
             .operation-title {
                 font-size: 1.2rem;
             }
-            .operation-note {
+            .operation-score {
                 font-size: 0.8rem;
+                padding: 0.24rem 0.55rem;
             }
             #timer-display,
             #score-text {
@@ -347,29 +373,34 @@
                             <span class="operation-icon">＋</span>
                             <span>
                                 <span class="operation-title">足し算</span>
-                                <span class="operation-note">たす計算に挑戦</span>
+                                <span class="operation-score" data-score-operation="addition">ハイスコア：なし</span>
                             </span>
                         </button>
                         <button class="operation-btn operation-card main-font" data-operation="subtraction">
                             <span class="operation-icon">−</span>
                             <span>
                                 <span class="operation-title">引き算</span>
-                                <span class="operation-note">ひく計算に挑戦</span>
+                                <span class="operation-score" data-score-operation="subtraction">ハイスコア：なし</span>
                             </span>
                         </button>
                         <button class="operation-btn operation-card main-font" data-operation="multiplication">
                             <span class="operation-icon">×</span>
                             <span>
                                 <span class="operation-title">掛け算</span>
-                                <span class="operation-note">かける計算に挑戦</span>
+                                <span class="operation-score" data-score-operation="multiplication">ハイスコア：なし</span>
                             </span>
                         </button>
                         <button class="operation-btn operation-card main-font" data-operation="division">
                             <span class="operation-icon">÷</span>
                             <span>
                                 <span class="operation-title">割り算</span>
-                                <span class="operation-note">わる計算に挑戦</span>
+                                <span class="operation-score" data-score-operation="division">ハイスコア：なし</span>
                             </span>
+                        </button>
+                    </div>
+                    <div class="mt-5 flex justify-center">
+                        <button id="reset-scores-btn" class="reset-score-btn main-font" type="button">
+                            スコアをリセット
                         </button>
                     </div>
                 </div>
@@ -491,6 +522,8 @@
             scoreSummary: document.getElementById('score-summary'),
             headerSubtitle: document.getElementById('header-subtitle'),
             operationButtons: document.querySelectorAll('.operation-btn'),
+            operationScoreDisplays: document.querySelectorAll('[data-score-operation]'),
+            resetScoresBtn: document.getElementById('reset-scores-btn'),
             quizSection: document.getElementById('quiz-section'),
             resultsSection: document.getElementById('results-section'),
             midQuitSection: document.getElementById('mid-quit-section'),
@@ -547,8 +580,43 @@
             }
         }
 
-        function getHighScoreStorageKey() {
-            return HIGH_SCORE_STORAGE_PREFIX + OPERATIONS[currentOperation].storageKey;
+        function getHighScoreStorageKey(operation = currentOperation) {
+            return HIGH_SCORE_STORAGE_PREFIX + OPERATIONS[operation].storageKey;
+        }
+
+        function getStoredHighScore(operation) {
+            try {
+                const localData = JSON.parse(localStorage.getItem(getHighScoreStorageKey(operation)) || '{}');
+                if (typeof localData.score !== 'number' || isNaN(localData.score)) {
+                    return null;
+                }
+                return localData;
+            } catch (error) {
+                console.error('Error loading operation high score:', error);
+                return null;
+            }
+        }
+
+        function updateHomeScoreDisplays() {
+            elements.operationScoreDisplays.forEach(display => {
+                const operation = display.dataset.scoreOperation;
+                const localData = getStoredHighScore(operation);
+                display.textContent = localData ? `ハイスコア：${localData.score}/${TOTAL_QUESTIONS}` : 'ハイスコア：なし';
+            });
+        }
+
+        function resetAllHighScores() {
+            const confirmed = confirm('足し算・引き算・掛け算・割り算のハイスコアをすべてリセットします。よろしいですか？');
+            if (!confirmed) return;
+
+            Object.keys(OPERATIONS).forEach(operation => {
+                localStorage.removeItem(getHighScoreStorageKey(operation));
+            });
+
+            highScore = { score: 0, time: Infinity };
+            elements.highScoreDisplay.textContent = `0 / ${TOTAL_QUESTIONS}`;
+            elements.bestTimeDisplay.textContent = '--';
+            updateHomeScoreDisplays();
         }
 
         window.loadHighScores = async function() {
@@ -570,6 +638,7 @@
                 const timeDisplay = highScore.time === Infinity ? '--' : formatTime(highScore.time);
                 elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
                 elements.bestTimeDisplay.textContent = timeDisplay;
+                updateHomeScoreDisplays();
             }
         }
 
@@ -589,6 +658,7 @@
 
             elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
             elements.bestTimeDisplay.textContent = formatTime(highScore.time);
+            updateHomeScoreDisplays();
 
             return true;
         }
@@ -796,6 +866,7 @@
             elements.scoreSummary.classList.add('hidden');
             elements.loadingOverlay.classList.add('hidden');
             elements.headerSubtitle.textContent = '選んで10問にチャレンジ！';
+            updateHomeScoreDisplays();
             elements.homeSection.classList.remove('hidden');
         }
 
@@ -804,6 +875,7 @@
                 startNewQuiz(button.dataset.operation);
             });
         });
+        elements.resetScoresBtn.addEventListener('click', resetAllHighScores);
         elements.checkBtn.addEventListener('click', checkAnswer);
         elements.answerInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
