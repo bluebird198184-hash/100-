@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100までのたしざんチャレンジ！</title>
+    <title>100までのけいさんチャレンジ！</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- 1年生向けに「Rounded Mplus 1p」をメインフォントとして追加 -->
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Rounded+Mplus+1p:wght@700;800&display=swap" rel="stylesheet">
 
     <script>
@@ -15,115 +14,46 @@
             theme: {
                 extend: {
                     colors: {
-                        'primary-blue': '#4E98F4', // 明るい青
-                        'primary-green': '#65C466', // 明るい緑
-                        'bg-light': '#FFFDE7', // クリームイエロー
+                        'primary-blue': '#4E98F4',
+                        'primary-green': '#65C466',
+                        'bg-light': '#FFFDE7',
                         'text-dark': '#333333',
                     }
                 }
             }
         }
     </script>
-    
-    <!-- Firebase SDKs -->
+
     <script type="module">
-        /*
-        // --- 修正: Firebaseの初期化を強制的にスキップし、ローカル起動を保証します ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        setLogLevel('Debug');
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-
-        let app, db, auth, userId;
-
-        // Promiseを使って初期化完了を待てるようにする
-        let firebaseReadyPromiseResolve;
-        const firebaseReadyPromise = new Promise(resolve => {
-            firebaseReadyPromiseResolve = resolve;
-        });
-        window.firebaseReadyPromise = firebaseReadyPromise; // windowに公開
-
-        async function initializeFirebase() {
-            try {
-                if (Object.keys(firebaseConfig).length > 0) {
-                    app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    userId = auth.currentUser?.uid || crypto.randomUUID();
-                    window.firebaseInitialized = true;
-                    window.db = db;
-                    window.userId = userId;
-                    window.appId = appId;
-                    
-                    window.doc = doc;
-                    window.setDoc = setDoc;
-                    window.getDoc = getDoc;
-                    
-                    firebaseReadyPromiseResolve(true); // Firebase初期化完了を通知
-                } else {
-                    console.error("Firebase configuration is missing. Running in local mode.");
-                    window.firebaseInitialized = false;
-                    // ローカルモードでもロードは続行させる
-                    firebaseReadyPromiseResolve(false); 
-                }
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                window.firebaseInitialized = false;
-                firebaseReadyPromiseResolve(false); // 初期化失敗を通知
-            } finally {
-                // ここで loadHighScores を呼び出すことで、必ず初期化後にスコアを読み込む
-                if (window.loadHighScores) window.loadHighScores(); 
-            }
-        }
-
-        initializeFirebase();
-        */
-        
-        // --- 強制ローカル起動設定 ---
-        window.firebaseReadyPromise = Promise.resolve(false); 
+        window.firebaseReadyPromise = Promise.resolve(false);
         window.firebaseInitialized = false;
-        window.userId = 'local-user'; // ダミーのユーザーID
-        
-        // ロード処理をすぐに開始
+        window.userId = 'local-user';
+
         document.addEventListener('DOMContentLoaded', () => {
             if (window.loadHighScores) {
                 window.loadHighScores();
             } else {
-                // loadHighScores関数がまだロードされていない場合は、安全のためにローディングを非表示にする
                 const loadingOverlay = document.getElementById('loading-overlay');
                 if (loadingOverlay) loadingOverlay.classList.add('hidden');
-                const startSection = document.getElementById('start-section');
-                if (startSection) startSection.classList.remove('hidden');
+                const homeSection = document.getElementById('home-section');
+                if (homeSection) homeSection.classList.remove('hidden');
             }
         });
     </script>
 
     <style>
-        /* 1年生向けデザイン調整 */
         body {
-            font-family: 'Rounded Mplus 1p', sans-serif; /* メインフォント */
+            font-family: 'Rounded Mplus 1p', sans-serif;
             min-height: 100vh;
             background:
                 radial-gradient(circle at top left, rgba(255, 226, 116, 0.65), transparent 28rem),
                 radial-gradient(circle at top right, rgba(126, 211, 255, 0.55), transparent 24rem),
                 linear-gradient(180deg, #FFF7C8 0%, #E8F7FF 52%, #FFFDE7 100%);
-            color: #333333; /* テキストを濃いグレーに */
+            color: #333333;
         }
         .main-font {
             font-family: 'Rounded Mplus 1p', sans-serif;
         }
-        
-        /* ボタンデザインの変更 */
         .btn {
             @apply w-full text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg transition-transform transform hover:-translate-y-0.5 hover:scale-[1.02] active:translate-y-1 active:scale-[0.98] focus:outline-none focus:ring-4;
             min-height: 56px;
@@ -135,10 +65,13 @@
         .btn-blue {
             @apply bg-primary-blue hover:bg-sky-600 focus:ring-sky-300 shadow-sky-500/40;
         }
-        
-        /* 入力ボックスの調整 */
+        .btn-orange {
+            @apply bg-orange-400 hover:bg-orange-500 focus:ring-orange-300 shadow-orange-500/40;
+        }
+        .btn-purple {
+            @apply bg-purple-500 hover:bg-purple-600 focus:ring-purple-300 shadow-purple-500/40;
+        }
         input[type=number] {
-            /* 文字サイズを一段階縮小 */
             @apply text-text-dark border-primary-blue focus:ring-primary-blue;
             -moz-appearance: textfield;
         }
@@ -147,18 +80,15 @@
             -webkit-appearance: none;
             margin: 0;
         }
-
         #answer-input {
             min-height: 76px;
             background: #FFFFFF;
             box-shadow: inset 0 3px 0 rgba(78, 152, 244, 0.12), 0 10px 18px rgba(78, 152, 244, 0.12);
         }
-
         #answer-input::placeholder {
             color: #9CA3AF;
             font-size: 1.15rem;
         }
-
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -172,40 +102,37 @@
             z-index: 10;
             border-radius: 1.5rem;
         }
-        
-        /* タイトル装飾 */
         .title-text {
-            /* 文字を太く、少し立体的で元気な印象に */
-            color: #E74C3C; /* 赤 */
-            text-shadow: 
-                -2px -2px 0 #FDE68A, /* 上左の影（黄色） */
-                2px -2px 0 #FDE68A, /* 上右の影 */
-                -2px 2px 0 #FDE68A, /* 下左の影 */
-                2px 2px 0 #FDE68A, /* 下右の影 */
+            color: #E74C3C;
+            text-shadow:
+                -2px -2px 0 #FDE68A,
+                2px -2px 0 #FDE68A,
+                -2px 2px 0 #FDE68A,
+                2px 2px 0 #FDE68A,
                 0 7px 16px rgba(231, 76, 60, 0.20);
             letter-spacing: 2px;
             line-height: 1.25;
         }
-
         #app-container {
             background: rgba(255, 255, 255, 0.96);
             box-shadow: 0 22px 45px rgba(78, 152, 244, 0.18);
         }
-
+        .home-card {
+            background: linear-gradient(135deg, #FFFBEB 0%, #EFF6FF 100%);
+            border: 4px dashed #F1C40F;
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 12px 22px rgba(241, 196, 15, 0.18);
+        }
         #progress-text {
             border: 2px solid rgba(78, 152, 244, 0.25);
         }
-
         #question-container {
             background: linear-gradient(135deg, #EBF5FF 0%, #F4FBFF 100%);
             box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.9), 0 14px 24px rgba(78, 152, 244, 0.16);
         }
-
         #question-text {
             line-height: 1.2;
             word-break: keep-all;
         }
-
         #timer-display,
         #score-text {
             background: #FFFFFF;
@@ -213,40 +140,25 @@
             padding: 0.45rem 0.9rem;
             box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
         }
-
         #results-section > div:first-of-type,
         #mid-quit-section > div:first-of-type {
             background: linear-gradient(135deg, #FEF3C7 0%, #FFF7ED 100%);
             box-shadow: 0 18px 32px rgba(245, 158, 11, 0.20);
         }
-
         #final-score-text {
             line-height: 1.25;
         }
-
-        /* ユーザーID表示を左下に固定 */
         #user-id-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             padding: 8px;
-            font-size: 0.75rem; /* text-xs */
-            color: #9CA3AF; /* gray-400 */
-            background-color: rgba(249, 250, 251, 0.85); /* gray-50 */
+            font-size: 0.75rem;
+            color: #9CA3AF;
+            background-color: rgba(249, 250, 251, 0.85);
             border-top-right-radius: 8px;
             z-index: 50;
         }
-
-        /* スタートボタンのコンテナデザイン */
-        .start-btn-container {
-            position: relative;
-            padding: 2rem; /* パディングを少し縮小 */
-            border: 4px dashed #F1C40F; /* 黄色の点線で強調 */
-            background: linear-gradient(135deg, #FFFBEB 0%, #EFF6FF 100%);
-            border-radius: 24px;
-            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 12px 22px rgba(241, 196, 15, 0.18);
-        }
-
         @media (max-width: 640px) {
             .title-text {
                 letter-spacing: 1px;
@@ -256,24 +168,19 @@
                     -1.5px 1.5px 0 #FDE68A,
                     1.5px 1.5px 0 #FDE68A;
             }
-
             #question-container {
                 padding: 1.5rem 1rem;
             }
-
             #question-text {
                 font-size: 2.6rem;
             }
-
             #answer-input {
                 min-height: 68px;
                 font-size: 2rem;
             }
-
             .btn {
                 min-height: 54px;
             }
-
             #timer-display,
             #score-text {
                 font-size: 1rem;
@@ -286,19 +193,15 @@
 
     <div class="container mx-auto px-3 py-4 sm:p-6 md:p-8 max-w-3xl">
         <header class="text-center mb-5 sm:mb-6 pt-2 pb-3">
-            <!-- 鉛筆とノートのアイコンを削除 -->
             <h1 class="main-font title-text text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">
-                <!-- タイトルを強調 -->
-                100までの たしざんチャレンジ！
+                100までの けいさんチャレンジ！
             </h1>
-            <p class="inline-block main-font text-base sm:text-lg text-primary-blue font-bold bg-white/85 px-5 py-2 rounded-full shadow-sm border-2 border-primary-blue/20">
-                <!-- サイズを lg/xl から base/lg に縮小 -->
-                10もんに チャレンジ！
+            <p id="header-subtitle" class="inline-block main-font text-base sm:text-lg text-primary-blue font-bold bg-white/85 px-5 py-2 rounded-full shadow-sm border-2 border-primary-blue/20">
+                えらんで 10もんに チャレンジ！
             </p>
         </header>
 
-        <!-- ハイスコアとベストタイムの表示 -->
-        <div class="flex justify-center sm:justify-end items-center text-sm bg-white/90 p-3 rounded-2xl shadow-md border-2 border-primary-blue/30 mb-5 sm:mb-6">
+        <div id="score-summary" class="hidden flex justify-center sm:justify-end items-center text-sm bg-white/90 p-3 rounded-2xl shadow-md border-2 border-primary-blue/30 mb-5 sm:mb-6">
             <div class="text-center min-w-[92px]">
                 <p class="font-extrabold text-amber-700 text-sm">ハイスコア</p>
                 <span id="high-score-display" class="font-extrabold text-lg text-amber-800">0 / 10</span>
@@ -311,35 +214,33 @@
         </div>
 
         <main id="app-container" class="bg-white rounded-3xl shadow-2xl p-4 sm:p-7 md:p-8 relative border-4 border-primary-green/40">
-            <!-- 修正: 初期状態でローディングを表示 -->
-            <div id="loading-overlay" class="loading-overlay"> 
+            <div id="loading-overlay" class="loading-overlay">
                 <p class="main-font text-2xl font-extrabold text-primary-blue">じゅんびちゅう...</p>
             </div>
 
-            <!-- Start Section (応援要素なし) -->
-            <div id="start-section" class="hidden text-center p-1 sm:p-2">
-                <div class="start-btn-container">
-                    <button id="start-new-btn" class="btn btn-blue main-font text-2xl py-4 px-10 transform hover:scale-105 transition-all duration-300">
-                        <!-- ボタンサイズを縮小 -->
-                        さあ、 はじめよう！
-                    </button>
+            <div id="home-section" class="hidden text-center p-1 sm:p-2">
+                <div class="home-card rounded-3xl p-5 sm:p-7">
+                    <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-primary-blue mb-3">どの けいさんに する？</h2>
+                    <p class="text-gray-600 font-bold mb-5">ボタンをえらぶと、10もんのチャレンジが はじまるよ。</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <button class="operation-btn btn btn-blue main-font text-xl" data-operation="addition">足し算</button>
+                        <button class="operation-btn btn btn-green main-font text-xl" data-operation="subtraction">引き算</button>
+                        <button class="operation-btn btn btn-orange main-font text-xl" data-operation="multiplication">掛け算</button>
+                        <button class="operation-btn btn btn-purple main-font text-xl" data-operation="division">割り算</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Quiz Section -->
             <div id="quiz-section" class="hidden">
                 <div id="progress-text" class="main-font text-lg sm:text-2xl font-extrabold text-primary-blue text-center mb-3 p-3 bg-primary-blue/10 rounded-2xl">
-                    <!-- サイズを 2xl/3xl から xl/2xl に縮小 -->
                     もんだい 1 / 10
                 </div>
 
                 <div class="w-full bg-primary-blue/20 rounded-full h-4 mb-5 p-1">
-                    <!-- プログレスバーの高さを縮小 -->
                     <div id="progress-bar" class="bg-primary-blue h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
-                
+
                 <div class="flex justify-between items-center gap-2 mb-5 text-sm sm:text-base font-bold">
-                    <!-- スコアとタイマーの文字サイズを縮小 -->
                     <div id="score-text" class="text-primary-green text-lg">せいかい: 0</div>
                     <div id="timer-display" class="main-font text-xl sm:text-2xl text-red-600 border-2 border-red-500 p-1 rounded-md">
                         0:00.0
@@ -347,7 +248,6 @@
                 </div>
 
                 <div id="question-container" class="bg-primary-blue/10 text-center p-6 sm:p-10 rounded-3xl mb-5 sm:mb-6 shadow-inner border-4 border-primary-blue/70">
-                    <!-- サイズを 5xl/6xl から 4xl/5xl に縮小 -->
                     <p id="question-text" class="main-font text-5xl sm:text-6xl font-extrabold tracking-wider text-primary-blue">0 + 0 =</p>
                 </div>
 
@@ -372,11 +272,9 @@
                 </div>
             </div>
 
-            <!-- Results Section (10問完了時) -->
             <div id="results-section" class="hidden text-center">
                 <h2 class="main-font text-2xl sm:text-4xl font-extrabold text-primary-blue mb-4">けっか はっぴょう！</h2>
                 <div class="bg-yellow-100 p-5 sm:p-7 rounded-3xl mb-6 border-4 border-amber-500 shadow-xl">
-                    <!-- サイズを 5xl/6xl から 4xl/5xl に縮小 -->
                     <p id="final-score-text" class="main-font text-4xl sm:text-5xl font-extrabold text-amber-800"></p>
                     <p id="final-time-text" class="main-font text-xl sm:text-2xl font-bold text-primary-blue mt-3">タイム: -</p>
                     <p id="final-message" class="mt-3 text-amber-700 text-lg sm:text-xl font-bold"></p>
@@ -384,22 +282,19 @@
                         ✨ ハイスコア こうしん！すごい！ ✨
                     </p>
                 </div>
-                
+
                 <div id="mistakes-container" class="mb-6 hidden">
                     <h3 class="main-font text-lg font-extrabold text-text-dark mb-3">
                         まちがえた もんだい (<span id="mistake-count" class="text-red-500"></span>もん)
                     </h3>
-                    <!-- リストの高さを max-h-48 から max-h-40 に、テキストサイズを lg から base に縮小 -->
                     <ul id="mistakes-list" class="text-left bg-red-50 p-3 rounded-2xl max-h-40 overflow-y-auto border-2 border-red-300 text-base"></ul>
                 </div>
 
-                <!-- 10問終了時は「ホームへ戻る」ボタンに変更 -->
                 <button id="go-to-home-btn" class="btn btn-blue main-font text-xl py-4">
                     ホームへ戻る
                 </button>
             </div>
-            
-            <!-- Mid-Quit Result Section (途中終了時) -->
+
             <div id="mid-quit-section" class="hidden text-center">
                 <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-red-700 mb-4">チャレンジ ちゅうし</h2>
                 <div class="bg-red-100 p-5 sm:p-6 rounded-3xl mb-6 border-4 border-red-500 shadow-xl">
@@ -410,28 +305,30 @@
                     ハイスコアは こうしん されないよ。
                 </p>
                 <button id="restart-from-quit-btn" class="btn btn-blue main-font text-xl py-4">
-                    さあ、はじめよう！
+                    ホームへ戻る
                 </button>
             </div>
         </main>
-
     </div>
 
-    <!-- ユーザーIDを画面左下（フッター）に表示 -->
     <footer id="user-id-footer">
-        <!-- 修正: Firebaseを使わない場合は「ローカルモード」と表示 -->
         <span id="user-id-display">ユーザーID: ローカルモード</span>
     </footer>
 
     <script>
         const TOTAL_QUESTIONS = 10;
-        const HIGH_SCORE_STORAGE_KEY = 'tashizan_high_score_10_questions';
-        
-        // --- Promiseを使ってFirebaseの初期化完了を待つ (Firebaseをスキップ) ---
-        // 修正: Promise.resolve(false) を返すことで、Firebaseは未初期化として扱う
-        const getFirebaseReadyPromise = () => window.firebaseReadyPromise; 
+        const HIGH_SCORE_STORAGE_PREFIX = 'keisan_high_score_10_questions_';
+        const OPERATIONS = {
+            addition: { label: '足し算', symbol: '+', storageKey: 'addition' },
+            subtraction: { label: '引き算', symbol: '-', storageKey: 'subtraction' },
+            multiplication: { label: '掛け算', symbol: '×', storageKey: 'multiplication' },
+            division: { label: '割り算', symbol: '÷', storageKey: 'division' }
+        };
+
+        const getFirebaseReadyPromise = () => window.firebaseReadyPromise;
 
         let questions = [];
+        let currentOperation = 'addition';
         let state = {
             currentQuestionIndex: 0,
             score: 0,
@@ -441,15 +338,15 @@
             startTime: null,
             elapsedTime: 0,
         };
-        // Infinityはベストタイム（最小値）の初期値として使用
-        let highScore = { score: 0, time: Infinity }; 
+        let highScore = { score: 0, time: Infinity };
         let timerInterval;
 
         const elements = {
             loadingOverlay: document.getElementById('loading-overlay'),
-            startSection: document.getElementById('start-section'),
-            startNewBtn: document.getElementById('start-new-btn'),
-            
+            homeSection: document.getElementById('home-section'),
+            scoreSummary: document.getElementById('score-summary'),
+            headerSubtitle: document.getElementById('header-subtitle'),
+            operationButtons: document.querySelectorAll('.operation-btn'),
             quizSection: document.getElementById('quiz-section'),
             resultsSection: document.getElementById('results-section'),
             midQuitSection: document.getElementById('mid-quit-section'),
@@ -458,37 +355,34 @@
             progressText: document.getElementById('progress-text'),
             scoreText: document.getElementById('score-text'),
             progressBar: document.getElementById('progress-bar'),
-            timerDisplay: document.getElementById('timer-display'), 
+            timerDisplay: document.getElementById('timer-display'),
             questionText: document.getElementById('question-text'),
             answerInput: document.getElementById('answer-input'),
             checkBtn: document.getElementById('check-btn'),
             feedbackText: document.getElementById('feedback-text'),
             nextBtn: document.getElementById('next-btn'),
             endQuizBtn: document.getElementById('end-quiz-btn'),
-
-            highScoreDisplay: document.getElementById('high-score-display'), 
-            bestTimeDisplay: document.getElementById('best-time-display'), 
-            userIdDisplay: document.getElementById('user-id-display'), 
-
+            highScoreDisplay: document.getElementById('high-score-display'),
+            bestTimeDisplay: document.getElementById('best-time-display'),
+            userIdDisplay: document.getElementById('user-id-display'),
             finalScoreText: document.getElementById('final-score-text'),
-            finalTimeText: document.getElementById('final-time-text'), 
+            finalTimeText: document.getElementById('final-time-text'),
             finalMessage: document.getElementById('final-message'),
             highScoreMessage: document.getElementById('high-score-message'),
             mistakesContainer: document.getElementById('mistakes-container'),
             mistakeCount: document.getElementById('mistake-count'),
             mistakesList: document.getElementById('mistakes-list'),
-            goToHomeBtn: document.getElementById('go-to-home-btn'), 
+            goToHomeBtn: document.getElementById('go-to-home-btn'),
         };
-        
-        // --- Utility for Time Formatting ---
+
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
-            const centiseconds = Math.floor((ms % 1000) / 100); 
+            const centiseconds = Math.floor((ms % 1000) / 100);
             return `${minutes}:${String(seconds).padStart(2, '0')}.${centiseconds}`;
         }
-        
+
         function updateTimerDisplay() {
             if (state.startTime) {
                 state.elapsedTime = Date.now() - state.startTime;
@@ -498,7 +392,7 @@
 
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            state.startTime = Date.now() - state.elapsedTime; 
+            state.startTime = Date.now() - state.elapsedTime;
             timerInterval = setInterval(updateTimerDisplay, 100);
         }
 
@@ -509,97 +403,114 @@
             }
         }
 
-        // --- Firebase/Firestore Logic (Local Fallback Only) ---
+        function getHighScoreStorageKey() {
+            return HIGH_SCORE_STORAGE_PREFIX + OPERATIONS[currentOperation].storageKey;
+        }
 
         window.loadHighScores = async function() {
-            // Firebase初期化を待機 (ローカルモードではすぐに完了する)
-            await getFirebaseReadyPromise(); // Promiseが解決するのを待つ
-
-            // 修正: ユーザーID表示をローカルモードに
+            await getFirebaseReadyPromise();
             elements.userIdDisplay.textContent = window.userId ? `ユーザーID: ${window.userId}` : 'ユーザーID: ローカルモード';
+            loadHighScoreForCurrentOperation();
+            showHomeSection();
+        }
 
+        function loadHighScoreForCurrentOperation() {
             try {
-                // FirebaseInitializedフラグに関わらず、ローカルストレージをメインとして使う
-                // --- 2. Local Storage Load (Fallback) ---
-                console.log("Loading high score from Local Storage (Firebase skipped).");
-                const localData = JSON.parse(localStorage.getItem(HIGH_SCORE_STORAGE_KEY) || '{}');
+                const localData = JSON.parse(localStorage.getItem(getHighScoreStorageKey()) || '{}');
                 highScore.score = localData.score || 0;
-                // NaNチェックとInfinityチェックを追加
-                highScore.time = isNaN(localData.time) || localData.time === Infinity ? Infinity : localData.time; 
-            
+                highScore.time = isNaN(localData.time) || localData.time === Infinity ? Infinity : localData.time;
             } catch (error) {
                 console.error("Error loading high score from Local Storage:", error);
-                // エラーが発生した場合も、現在のhighScore（初期値0/Infinity）を維持
+                highScore = { score: 0, time: Infinity };
             } finally {
                 const timeDisplay = highScore.time === Infinity ? '--' : formatTime(highScore.time);
                 elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
                 elements.bestTimeDisplay.textContent = timeDisplay;
-                showStartSection(); // 読み込み完了後、スタート画面へ
             }
         }
 
         async function saveHighScore(newScore, newTime) {
-            // ハイスコア更新チェック
             let isNewHighScore = false;
             if (newScore > highScore.score) {
                 isNewHighScore = true;
             } else if (newScore === highScore.score && newTime < highScore.time) {
-                // スコアが同点の場合、タイムが速ければ更新
                 isNewHighScore = true;
             }
 
             if (!isNewHighScore) return false;
 
-            // 修正: Firebaseへの保存処理をスキップ
-            // --- Local Storage Save ---
-            console.log("Saving high score to Local Storage.");
-            localStorage.setItem(HIGH_SCORE_STORAGE_KEY, JSON.stringify({ score: newScore, time: newTime }));
-            
-            // スコアが更新されたので、ローカル変数と表示を更新する
+            localStorage.setItem(getHighScoreStorageKey(), JSON.stringify({ score: newScore, time: newTime }));
             highScore.score = newScore;
             highScore.time = newTime;
-            
-            const timeDisplay = formatTime(highScore.time);
+
             elements.highScoreDisplay.textContent = `${highScore.score} / ${TOTAL_QUESTIONS}`;
-            elements.bestTimeDisplay.textContent = timeDisplay;
+            elements.bestTimeDisplay.textContent = formatTime(highScore.time);
 
             return true;
         }
 
-        // --- Quiz Logic ---
+        function generateAdditionQuestion() {
+            let a, b, answer;
+            do {
+                a = Math.floor(Math.random() * 90) + 10;
+                b = Math.floor(Math.random() * 9) + 1;
+                answer = a + b;
+            } while (answer > 100);
+            return { q: `${a} + ${b}`, a: answer };
+        }
+
+        function generateSubtractionQuestion() {
+            const a = Math.floor(Math.random() * 91) + 10;
+            const b = Math.floor(Math.random() * (a + 1));
+            return { q: `${a} - ${b}`, a: a - b };
+        }
+
+        function generateMultiplicationQuestion() {
+            const a = Math.floor(Math.random() * 9) + 1;
+            const b = Math.floor(Math.random() * 9) + 1;
+            return { q: `${a} × ${b}`, a: a * b };
+        }
+
+        function generateDivisionQuestion() {
+            const answer = Math.floor(Math.random() * 9) + 1;
+            const b = Math.floor(Math.random() * 9) + 1;
+            const a = answer * b;
+            return { q: `${a} ÷ ${b}`, a: answer };
+        }
 
         function generateRandomQuestions() {
             const newQuestions = [];
-            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-                let a, b, q, answer;
-                
-                // 答えが100を超えない 2桁 + 1桁 の問題を生成 (10-99 + 1-9)
-                do {
-                    a = Math.floor(Math.random() * 90) + 10; 
-                    b = Math.floor(Math.random() * 9) + 1;  
-                    answer = a + b;
-                } while (answer > 100);
+            const generators = {
+                addition: generateAdditionQuestion,
+                subtraction: generateSubtractionQuestion,
+                multiplication: generateMultiplicationQuestion,
+                division: generateDivisionQuestion
+            };
 
-                q = `${a} + ${b}`;
-                newQuestions.push({ q, a: answer });
+            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+                newQuestions.push(generators[currentOperation]());
             }
             return newQuestions;
         }
 
-        function startNewQuiz() {
+        function startNewQuiz(operation) {
+            currentOperation = operation;
+            loadHighScoreForCurrentOperation();
             questions = generateRandomQuestions();
             state.currentQuestionIndex = 0;
             state.score = 0;
             state.mistakes = [];
             state.totalQuestions = questions.length;
-            state.elapsedTime = 0; 
+            state.elapsedTime = 0;
             state.isQuizActive = true;
-            
-            elements.startSection.classList.add('hidden');
+
+            elements.headerSubtitle.textContent = `${OPERATIONS[currentOperation].label} 10もんに チャレンジ！`;
+            elements.homeSection.classList.add('hidden');
             elements.resultsSection.classList.add('hidden');
             elements.midQuitSection.classList.add('hidden');
+            elements.scoreSummary.classList.remove('hidden');
             elements.quizSection.classList.remove('hidden');
-            
+
             startTimer();
             renderQuestion();
             updateScore();
@@ -618,11 +529,11 @@
         }
 
         function updateProgress() {
-            elements.progressText.textContent = `もんだい ${state.currentQuestionIndex + 1} / ${state.totalQuestions}`;
-            const progressPercentage = ((state.currentQuestionIndex) / state.totalQuestions) * 100;
+            elements.progressText.textContent = `${OPERATIONS[currentOperation].label} もんだい ${state.currentQuestionIndex + 1} / ${state.totalQuestions}`;
+            const progressPercentage = (state.currentQuestionIndex / state.totalQuestions) * 100;
             elements.progressBar.style.width = `${progressPercentage}%`;
         }
-        
+
         function updateScore() {
             elements.scoreText.textContent = `せいかい: ${state.score}`;
         }
@@ -636,7 +547,6 @@
             }
 
             const correctAnswer = questions[state.currentQuestionIndex].a;
-            
             elements.checkBtn.disabled = true;
 
             if (userAnswer === correctAnswer) {
@@ -653,7 +563,7 @@
                     index: state.currentQuestionIndex + 1
                 });
             }
-            
+
             updateScore();
             elements.checkBtn.classList.add('hidden');
             elements.nextBtn.classList.remove('hidden');
@@ -669,43 +579,37 @@
                 renderQuestion();
                 updateProgress();
             } else {
-                showResults(false); // 全問終了
+                showResults(false);
             }
         }
 
         function endQuiz() {
             if (state.isQuizActive) {
-                showResults(true); // 途中終了
+                showResults(true);
             }
         }
 
         async function showResults(isMidQuit) {
-            stopTimer(); 
+            stopTimer();
             state.isQuizActive = false;
 
             elements.quizSection.classList.add('hidden');
-            elements.highScoreMessage.classList.add('hidden'); 
-            
+            elements.highScoreMessage.classList.add('hidden');
+
             if (isMidQuit) {
-                // 途中終了画面
                 elements.resultsSection.classList.add('hidden');
                 elements.midQuitSection.classList.remove('hidden');
-                
-                // 途中終了の場合はスコアを反映しない
-                const totalAnswered = state.currentQuestionIndex + 1; 
-                const displayAnswered = totalAnswered > 0 ? totalAnswered : 0; 
 
-                const quitScoreText = `${displayAnswered}もんだいのうち ${state.score}もん せいかい！ (${state.score}/${displayAnswered})`;
-                elements.midQuitScoreText.textContent = quitScoreText;
-
+                const totalAnswered = state.currentQuestionIndex + 1;
+                const displayAnswered = totalAnswered > 0 ? totalAnswered : 0;
+                elements.midQuitScoreText.textContent = `${displayAnswered}もんだいのうち ${state.score}もん せいかい！ (${state.score}/${displayAnswered})`;
             } else {
-                // 10問完了画面
                 elements.midQuitSection.classList.add('hidden');
                 elements.resultsSection.classList.remove('hidden');
 
-                elements.finalScoreText.textContent = `ぜんぶで ${state.score}もん せいかい！`;
+                elements.finalScoreText.textContent = `${OPERATIONS[currentOperation].label}で ${state.score}もん せいかい！`;
                 elements.finalTimeText.textContent = `タイム: ${formatTime(state.elapsedTime)}`;
-                
+
                 let message = '';
                 if (state.score === state.totalQuestions) {
                     message = 'たいへん よく できました！ えらいね！💯';
@@ -715,8 +619,7 @@
                     message = 'どんまい！ ゆっくり がんばろうね！';
                 }
                 elements.finalMessage.textContent = message;
-                
-                // 修正: 10問完走時は必ずハイスコアをチェックし、更新されていれば保存する
+
                 const isHighScore = await saveHighScore(state.score, state.elapsedTime);
                 if (isHighScore) {
                     elements.highScoreMessage.classList.remove('hidden');
@@ -738,26 +641,29 @@
             }
         }
 
-        function showStartSection() {
-            stopTimer(); // タイマーが動いている場合は止める
+        function showHomeSection() {
+            stopTimer();
             state.elapsedTime = 0;
             updateTimerDisplay();
 
             elements.quizSection.classList.add('hidden');
             elements.resultsSection.classList.add('hidden');
             elements.midQuitSection.classList.add('hidden');
-            
-            // --- 読み込み完了後にローディング画面を非表示にする ---
-            elements.loadingOverlay.classList.add('hidden'); 
-            elements.startSection.classList.remove('hidden');
+            elements.scoreSummary.classList.add('hidden');
+            elements.loadingOverlay.classList.add('hidden');
+            elements.headerSubtitle.textContent = 'えらんで 10もんに チャレンジ！';
+            elements.homeSection.classList.remove('hidden');
         }
 
-        // --- Event Listeners ---
-
+        elements.operationButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                startNewQuiz(button.dataset.operation);
+            });
+        });
         elements.checkBtn.addEventListener('click', checkAnswer);
         elements.answerInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
-                event.preventDefault(); 
+                event.preventDefault();
                 if (!elements.checkBtn.classList.contains('hidden')) {
                     checkAnswer();
                 } else if (!elements.nextBtn.classList.contains('hidden')) {
@@ -767,20 +673,15 @@
         });
         elements.nextBtn.addEventListener('click', nextQuestion);
         elements.endQuizBtn.addEventListener('click', endQuiz);
-        elements.startNewBtn.addEventListener('click', startNewQuiz);
-        elements.goToHomeBtn.addEventListener('click', showStartSection); 
-        elements.restartFromQuitBtn.addEventListener('click', startNewQuiz);
+        elements.goToHomeBtn.addEventListener('click', showHomeSection);
+        elements.restartFromQuitBtn.addEventListener('click', showHomeSection);
 
-        // --- 修正: DOMContentLoaded でロード処理を開始し、ローディング画面を確実に表示させる ---
         document.addEventListener('DOMContentLoaded', () => {
             elements.loadingOverlay.classList.remove('hidden');
-            // type="module"のスクリプトで loadHighScores を呼び出す代わりに、ここで直接呼び出す
-            // 強制的にローカルモードで動作させるため、この呼び出しはすぐに showStartSection() に進むはず
             if (window.loadHighScores) {
                 window.loadHighScores();
             } else {
-                // 万が一 loadHighScores が定義されていなくても、画面が止まらないようにする
-                showStartSection();
+                showHomeSection();
             }
         });
     </script>
