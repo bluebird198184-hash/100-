@@ -103,8 +103,7 @@
             line-height: 1.25;
         }
         #header-subtitle {
-            border: 0;
-            box-shadow: 0 8px 16px rgba(78, 152, 244, 0.12);
+            display: none;
         }
         #app-container {
             background: rgba(255, 255, 255, 0.97);
@@ -127,8 +126,8 @@
             min-height: 92px;
             padding: 1rem 1.15rem;
             border-radius: 26px;
-            border: 0;
-            box-shadow: 0 12px 22px rgba(78, 152, 244, 0.16);
+            border: 1px solid rgba(31, 41, 55, 0.08);
+            box-shadow: 0 14px 26px rgba(78, 152, 244, 0.20);
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
             text-align: left;
             cursor: pointer;
@@ -136,25 +135,25 @@
         .operation-chip:hover,
         .operation-chip:focus-visible {
             transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 16px 30px rgba(78, 152, 244, 0.24);
+            box-shadow: 0 18px 32px rgba(78, 152, 244, 0.30);
             filter: brightness(1.02);
             outline: none;
         }
         .operation-chip:active {
             transform: translateY(1px) scale(0.98);
-            box-shadow: 0 8px 14px rgba(78, 152, 244, 0.16);
+            box-shadow: 0 8px 14px rgba(78, 152, 244, 0.18);
         }
         .operation-chip[data-operation="addition"] {
-            background: #EAF4FF;
+            background: #DCEEFF;
         }
         .operation-chip[data-operation="subtraction"] {
-            background: #EAFBF0;
+            background: #DDF6E7;
         }
         .operation-chip[data-operation="multiplication"] {
-            background: #FFF3E4;
+            background: #FFE4C4;
         }
         .operation-chip[data-operation="division"] {
-            background: #F6ECFF;
+            background: #EEDCFF;
         }
         .operation-icon {
             display: flex;
@@ -310,9 +309,7 @@
             <h1 class="main-font title-text text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3">
                 100までの 計算チャレンジ！
             </h1>
-            <p id="header-subtitle" class="inline-block main-font text-base sm:text-lg text-primary-blue font-bold bg-white/85 px-5 py-2 rounded-full">
-                選んで10問にチャレンジ！
-            </p>
+            <span id="header-subtitle"></span>
         </header>
 
         <div id="score-summary" class="hidden flex justify-center sm:justify-end items-center text-sm bg-white/90 p-3 rounded-2xl shadow-md border-2 border-primary-blue/30 mb-5 sm:mb-6">
