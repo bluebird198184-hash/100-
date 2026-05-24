@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Rounded+Mplus+1p:wght@700;800&display=swap" rel="stylesheet">
-
     <script>
         tailwind.config = {
             theme: {
@@ -16,19 +15,16 @@
                     colors: {
                         'primary-blue': '#4E98F4',
                         'primary-green': '#65C466',
-                        'bg-light': '#FFFDE7',
                         'text-dark': '#333333',
                     }
                 }
             }
         }
     </script>
-
     <script type="module">
         window.firebaseReadyPromise = Promise.resolve(false);
         window.firebaseInitialized = false;
         window.userId = 'local-user';
-
         document.addEventListener('DOMContentLoaded', () => {
             if (window.loadHighScores) {
                 window.loadHighScores();
@@ -40,7 +36,6 @@
             }
         });
     </script>
-
     <style>
         body {
             font-family: 'Rounded Mplus 1p', sans-serif;
@@ -112,40 +107,47 @@
             box-shadow: 0 22px 45px rgba(78, 152, 244, 0.18);
         }
         .home-card {
-            background: linear-gradient(135deg, #FFFBEB 0%, #EFF6FF 100%);
-            border: 4px dashed #F1C40F;
-            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 12px 22px rgba(241, 196, 15, 0.18);
+            background: linear-gradient(135deg, #FFFBEB 0%, #FFF7ED 100%);
+            border: 4px solid rgba(251, 146, 60, 0.65);
+            border-radius: 2rem;
+            box-shadow: 0 14px 26px rgba(251, 146, 60, 0.16);
         }
-        .operation-grid {
-            background: rgba(255, 255, 255, 0.72);
-            border: 2px solid rgba(78, 152, 244, 0.18);
-            border-radius: 24px;
-            padding: 0.85rem;
-            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85);
-        }
-        .operation-card {
+        .operation-chip {
             display: flex;
             align-items: center;
             gap: 0.9rem;
             width: 100%;
-            min-height: 92px;
+            min-height: 88px;
             padding: 1rem 1.1rem;
-            border-radius: 22px;
-            background: #FFFFFF;
-            border: 3px solid transparent;
+            border-radius: 999px;
+            border: 0;
             box-shadow: 0 12px 20px rgba(78, 152, 244, 0.14);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
             text-align: left;
+            cursor: pointer;
         }
-        .operation-card:hover,
-        .operation-card:focus-visible {
+        .operation-chip:hover,
+        .operation-chip:focus-visible {
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 16px 28px rgba(78, 152, 244, 0.22);
+            filter: brightness(1.02);
             outline: none;
         }
-        .operation-card:active {
+        .operation-chip:active {
             transform: translateY(1px) scale(0.98);
             box-shadow: 0 8px 14px rgba(78, 152, 244, 0.16);
+        }
+        .operation-chip[data-operation="addition"] {
+            background: #EFF6FF;
+        }
+        .operation-chip[data-operation="subtraction"] {
+            background: #F0FDF4;
+        }
+        .operation-chip[data-operation="multiplication"] {
+            background: #FFF7ED;
+        }
+        .operation-chip[data-operation="division"] {
+            background: #FAF5FF;
         }
         .operation-icon {
             display: flex;
@@ -160,6 +162,18 @@
             font-weight: 800;
             box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
         }
+        .operation-chip[data-operation="addition"] .operation-icon {
+            background: #4E98F4;
+        }
+        .operation-chip[data-operation="subtraction"] .operation-icon {
+            background: #65C466;
+        }
+        .operation-chip[data-operation="multiplication"] .operation-icon {
+            background: #FB923C;
+        }
+        .operation-chip[data-operation="division"] .operation-icon {
+            background: #A855F7;
+        }
         .operation-title {
             display: block;
             color: #1F2937;
@@ -168,86 +182,37 @@
             font-weight: 800;
         }
         .operation-score {
-            display: inline-block;
-            margin-top: 0.45rem;
-            padding: 0.28rem 0.65rem;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.9);
+            display: block;
+            margin-top: 0.25rem;
             color: #4B5563;
-            font-size: 0.88rem;
-            line-height: 1.25;
+            font-size: 0.9rem;
+            line-height: 1.3;
             font-weight: 800;
-            border: 2px solid rgba(107, 114, 128, 0.14);
         }
         .reset-score-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 48px;
-            padding: 0.75rem 1.25rem;
+            min-height: 50px;
+            padding: 0.8rem 1.4rem;
             border-radius: 999px;
-            background: #FFFFFF;
+            background: #FEF2F2;
             color: #B91C1C;
             font-weight: 800;
-            border: 2px solid rgba(239, 68, 68, 0.35);
-            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.12);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+            border: 0;
+            box-shadow: 0 10px 18px rgba(239, 68, 68, 0.14);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
         .reset-score-btn:hover,
         .reset-score-btn:focus-visible {
-            background: #FEF2F2;
-            border-color: #EF4444;
             transform: translateY(-2px);
-            box-shadow: 0 12px 22px rgba(239, 68, 68, 0.18);
+            box-shadow: 0 14px 24px rgba(239, 68, 68, 0.2);
+            filter: brightness(1.01);
             outline: none;
         }
         .reset-score-btn:active {
             transform: translateY(1px);
             box-shadow: 0 6px 12px rgba(239, 68, 68, 0.14);
-        }
-        .operation-card[data-operation="addition"] {
-            border-color: rgba(78, 152, 244, 0.35);
-        }
-        .operation-card[data-operation="addition"] .operation-icon {
-            background: #4E98F4;
-        }
-        .operation-card[data-operation="addition"]:hover,
-        .operation-card[data-operation="addition"]:focus-visible {
-            background: #EFF6FF;
-            border-color: #4E98F4;
-        }
-        .operation-card[data-operation="subtraction"] {
-            border-color: rgba(101, 196, 102, 0.38);
-        }
-        .operation-card[data-operation="subtraction"] .operation-icon {
-            background: #65C466;
-        }
-        .operation-card[data-operation="subtraction"]:hover,
-        .operation-card[data-operation="subtraction"]:focus-visible {
-            background: #F0FDF4;
-            border-color: #65C466;
-        }
-        .operation-card[data-operation="multiplication"] {
-            border-color: rgba(251, 146, 60, 0.42);
-        }
-        .operation-card[data-operation="multiplication"] .operation-icon {
-            background: #FB923C;
-        }
-        .operation-card[data-operation="multiplication"]:hover,
-        .operation-card[data-operation="multiplication"]:focus-visible {
-            background: #FFF7ED;
-            border-color: #FB923C;
-        }
-        .operation-card[data-operation="division"] {
-            border-color: rgba(168, 85, 247, 0.38);
-        }
-        .operation-card[data-operation="division"] .operation-icon {
-            background: #A855F7;
-        }
-        .operation-card[data-operation="division"]:hover,
-        .operation-card[data-operation="division"]:focus-visible {
-            background: #FAF5FF;
-            border-color: #A855F7;
         }
         #progress-text {
             border: 2px solid rgba(78, 152, 244, 0.25);
@@ -308,12 +273,10 @@
             .btn {
                 min-height: 54px;
             }
-            .operation-grid {
-                padding: 0.65rem;
-            }
-            .operation-card {
-                min-height: 88px;
-                padding: 0.9rem;
+            .operation-chip {
+                min-height: 82px;
+                padding: 0.85rem 0.95rem;
+                border-radius: 1.5rem;
             }
             .operation-icon {
                 width: 2.75rem;
@@ -324,8 +287,7 @@
                 font-size: 1.2rem;
             }
             .operation-score {
-                font-size: 0.8rem;
-                padding: 0.24rem 0.55rem;
+                font-size: 0.82rem;
             }
             #timer-display,
             #score-text {
@@ -365,32 +327,30 @@
             </div>
 
             <div id="home-section" class="hidden text-center p-1 sm:p-2">
-                <div class="home-card rounded-3xl p-5 sm:p-7">
-                    <h2 class="main-font text-2xl sm:text-3xl font-extrabold text-primary-blue mb-3">どの計算にする？</h2>
-                    <p class="text-gray-600 font-bold mb-5">ボタンを選ぶと、10問のチャレンジが始まります。</p>
-                    <div class="operation-grid grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <button class="operation-btn operation-card main-font" data-operation="addition">
+                <div class="home-card p-5 sm:p-7">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <button class="operation-btn operation-chip main-font" data-operation="addition">
                             <span class="operation-icon">＋</span>
                             <span>
                                 <span class="operation-title">足し算</span>
                                 <span class="operation-score" data-score-operation="addition">ハイスコア：なし</span>
                             </span>
                         </button>
-                        <button class="operation-btn operation-card main-font" data-operation="subtraction">
+                        <button class="operation-btn operation-chip main-font" data-operation="subtraction">
                             <span class="operation-icon">−</span>
                             <span>
                                 <span class="operation-title">引き算</span>
                                 <span class="operation-score" data-score-operation="subtraction">ハイスコア：なし</span>
                             </span>
                         </button>
-                        <button class="operation-btn operation-card main-font" data-operation="multiplication">
+                        <button class="operation-btn operation-chip main-font" data-operation="multiplication">
                             <span class="operation-icon">×</span>
                             <span>
                                 <span class="operation-title">掛け算</span>
                                 <span class="operation-score" data-score-operation="multiplication">ハイスコア：なし</span>
                             </span>
                         </button>
-                        <button class="operation-btn operation-card main-font" data-operation="division">
+                        <button class="operation-btn operation-chip main-font" data-operation="division">
                             <span class="operation-icon">÷</span>
                             <span>
                                 <span class="operation-title">割り算</span>
