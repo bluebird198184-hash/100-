@@ -199,6 +199,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 0.65rem;
             min-height: 50px;
             padding: 0.8rem 1.4rem;
             border-radius: 999px;
@@ -219,6 +220,14 @@
         .reset-score-btn:active {
             transform: translateY(1px);
             box-shadow: 0 7px 13px rgba(239, 68, 68, 0.18);
+        }
+        .reset-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            line-height: 1;
+            font-weight: 800;
         }
         #progress-text {
             border: 2px solid rgba(78, 152, 244, 0.25);
@@ -364,7 +373,8 @@
                     </div>
                     <div class="mt-6 flex justify-center">
                         <button id="reset-scores-btn" class="reset-score-btn main-font" type="button">
-                            スコアをリセット
+                            <span class="reset-icon" aria-hidden="true">↻</span>
+                            <span>スコアをリセット</span>
                         </button>
                     </div>
                 </div>
